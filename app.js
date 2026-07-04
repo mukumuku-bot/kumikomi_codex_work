@@ -101,7 +101,7 @@ const authState = {
   user: null,
   session: null,
 };
-const AUTH_REDIRECT_URL = "https://mukumuku-bot.github.io/kumikomi_codex1-sound-direction/index.html#account";
+const AUTH_REDIRECT_URL = new URL("index.html#account", window.location.href).href;
 
 const ctx = elements.overlay.getContext("2d");
 const BARK_AUDIO_SRC = "./assets/dog-bark.mp3?v=real-bark-1";
