@@ -1,5 +1,5 @@
-const CACHE_PREFIX = "sound-bearing-transcription-";
-const CACHE_NAME = `${CACHE_PREFIX}v3`;
+const CACHE_PREFIX = "transcription-only-";
+const CACHE_NAME = `${CACHE_PREFIX}v1`;
 const FILES = [
   "./index.html",
   "./styles.css",
