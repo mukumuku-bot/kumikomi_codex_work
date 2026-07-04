@@ -354,45 +354,55 @@ button:disabled {
   place-items: center;
 }
 
-.robot-head {
+.robot-dog {
   position: relative;
-  width: min(100%, 430px);
-  aspect-ratio: 1.18 / 1;
+  width: min(100%, 460px);
+  height: 390px;
+}
+
+.dog-head-shell {
+  position: absolute;
+  z-index: 4;
+  left: 48px;
+  top: 18px;
+  width: 248px;
+  height: 172px;
   display: grid;
   place-items: center;
   border: 1px solid #c9d8ea;
-  border-radius: 34% 34% 28% 28%;
+  border-radius: 34% 38% 28% 32%;
   background:
-    radial-gradient(circle at 50% 18%, rgba(248, 250, 252, 0.12), transparent 34%),
-    linear-gradient(160deg, #34445e, #182438 58%, #0c1320);
-  box-shadow: 0 28px 80px rgba(15, 35, 65, 0.22);
+    radial-gradient(circle at 42% 18%, rgba(255, 255, 255, 0.92), transparent 28%),
+    linear-gradient(160deg, #f8fbff, #dceaff 68%, #b8cae2);
+  box-shadow: 0 24px 50px rgba(15, 35, 65, 0.2);
 }
 
-.ear {
+.dog-ear-shape {
   position: absolute;
-  top: -20px;
-  width: 88px;
-  height: 120px;
-  border: 1px solid rgba(248, 250, 252, 0.18);
-  background: linear-gradient(160deg, #2a3a52, #111827);
+  top: -16px;
+  width: 76px;
+  height: 104px;
+  border: 1px solid #c9d8ea;
+  background: linear-gradient(160deg, #eaf2ff, #b8cae2);
+  box-shadow: inset 0 -12px 20px rgba(31, 111, 235, 0.08);
 }
 
-.left-ear {
-  left: 22px;
-  border-radius: 64% 24% 58% 32%;
-  transform: rotate(-22deg);
+.dog-ear-shape.left-ear {
+  left: -16px;
+  border-radius: 72% 28% 58% 36%;
+  transform: rotate(-20deg);
 }
 
-.right-ear {
-  right: 22px;
-  border-radius: 24% 64% 32% 58%;
-  transform: rotate(22deg);
+.dog-ear-shape.right-ear {
+  right: -18px;
+  border-radius: 28% 72% 36% 58%;
+  transform: rotate(24deg);
 }
 
 .phone-eye {
   position: relative;
   z-index: 2;
-  width: 78%;
+  width: 76%;
   aspect-ratio: 2.05 / 1;
   display: grid;
   place-items: center;
@@ -423,15 +433,148 @@ button:disabled {
   width: 100%;
 }
 
-.robot-nose {
+.dog-muzzle {
   position: absolute;
-  bottom: 54px;
+  bottom: -18px;
   left: 50%;
-  width: 34px;
-  height: 22px;
+  width: 88px;
+  height: 52px;
+  border: 1px solid #c9d8ea;
+  border-radius: 44% 44% 50% 50%;
+  background: #ffffff;
+  transform: translateX(-50%);
+}
+
+.dog-nose {
+  position: absolute;
+  bottom: 6px;
+  left: 50%;
+  width: 24px;
+  height: 16px;
   border-radius: 50% 50% 60% 60%;
   background: #050914;
   transform: translateX(-50%);
+}
+
+.dog-neck {
+  position: absolute;
+  z-index: 2;
+  left: 180px;
+  top: 156px;
+  width: 76px;
+  height: 70px;
+  border-radius: 18px;
+  background: linear-gradient(180deg, #dceaff, #b8cae2);
+  border: 1px solid #c9d8ea;
+}
+
+.dog-body-shell {
+  position: absolute;
+  z-index: 1;
+  left: 120px;
+  top: 174px;
+  width: 260px;
+  height: 122px;
+  border: 1px solid #c9d8ea;
+  border-radius: 60px 80px 46px 46px;
+  background:
+    radial-gradient(circle at 34% 28%, rgba(255, 255, 255, 0.82), transparent 26%),
+    linear-gradient(160deg, #f8fbff, #dceaff 64%, #b8cae2);
+  box-shadow: 0 28px 60px rgba(15, 35, 65, 0.18);
+}
+
+.dog-chest-light {
+  position: absolute;
+  left: 42px;
+  top: 24px;
+  width: 70px;
+  height: 52px;
+  border-radius: 50%;
+  background: rgba(31, 111, 235, 0.08);
+}
+
+.dog-tail {
+  position: absolute;
+  right: -48px;
+  top: 18px;
+  width: 72px;
+  height: 24px;
+  border: 10px solid #b8cae2;
+  border-left: 0;
+  border-bottom: 0;
+  border-radius: 0 36px 0 0;
+  transform: rotate(-24deg);
+}
+
+.dog-leg {
+  position: absolute;
+  z-index: 0;
+  width: 30px;
+  height: 98px;
+  border: 1px solid #c9d8ea;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #dceaff, #aebfd7);
+}
+
+.front-left {
+  left: 166px;
+  top: 268px;
+}
+
+.front-right {
+  left: 214px;
+  top: 266px;
+}
+
+.back-left {
+  left: 294px;
+  top: 268px;
+}
+
+.back-right {
+  left: 340px;
+  top: 262px;
+}
+
+.dog-paw {
+  position: absolute;
+  z-index: 2;
+  width: 54px;
+  height: 22px;
+  border-radius: 999px;
+  background: #ffffff;
+  border: 1px solid #c9d8ea;
+  box-shadow: 0 10px 20px rgba(15, 35, 65, 0.12);
+}
+
+.paw-front-left {
+  left: 150px;
+  top: 354px;
+}
+
+.paw-front-right {
+  left: 198px;
+  top: 352px;
+}
+
+.paw-back-left {
+  left: 278px;
+  top: 354px;
+}
+
+.paw-back-right {
+  left: 324px;
+  top: 348px;
+}
+
+.dog-ground {
+  position: absolute;
+  left: 70px;
+  right: 24px;
+  bottom: 0;
+  height: 18px;
+  border-radius: 50%;
+  background: rgba(31, 111, 235, 0.12);
 }
 
 .feature-grid {

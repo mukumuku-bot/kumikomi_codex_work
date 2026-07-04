@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#101828" />
     <title>見守り支援システム</title>
     <link rel="manifest" href="./manifest.webmanifest" />
-    <link rel="stylesheet" href="./styles.css?v=white-blue-1" />
+    <link rel="stylesheet" href="./styles.css?v=dog-fullbody-1" />
   </head>
   <body>
     <header class="topbar">
@@ -57,24 +57,41 @@
           </div>
 
           <div class="robot-visual" aria-hidden="true">
-            <div class="robot-head">
-              <span class="ear left-ear"></span>
-              <span class="ear right-ear"></span>
-              <div class="phone-eye">
-              <svg viewBox="0 0 320 170" role="img" aria-label="追従する目の表示">
-                <path d="M56 54 Q100 26 144 54" fill="none" stroke="#89d8ff" stroke-width="8" stroke-linecap="round" />
-                <path d="M176 54 Q220 26 264 54" fill="none" stroke="#89d8ff" stroke-width="8" stroke-linecap="round" />
-                <ellipse cx="100" cy="88" rx="48" ry="39" fill="#eafcff" stroke="#0b2530" stroke-width="6" />
-                <ellipse cx="220" cy="88" rx="48" ry="39" fill="#eafcff" stroke="#0b2530" stroke-width="6" />
-                <g>
-                  <circle cx="100" cy="91" r="18" fill="#071319" />
-                  <circle cx="220" cy="91" r="18" fill="#071319" />
-                  <circle cx="93" cy="82" r="5" fill="#ffffff" />
-                  <circle cx="213" cy="82" r="5" fill="#ffffff" />
-                </g>
-              </svg>
+            <div class="robot-dog">
+              <div class="dog-head-shell">
+                <span class="dog-ear-shape left-ear"></span>
+                <span class="dog-ear-shape right-ear"></span>
+                <div class="phone-eye">
+                  <svg viewBox="0 0 320 170" role="img" aria-label="追従する目の表示">
+                    <path d="M56 54 Q100 26 144 54" fill="none" stroke="#89d8ff" stroke-width="8" stroke-linecap="round" />
+                    <path d="M176 54 Q220 26 264 54" fill="none" stroke="#89d8ff" stroke-width="8" stroke-linecap="round" />
+                    <ellipse cx="100" cy="88" rx="48" ry="39" fill="#eafcff" stroke="#0b2530" stroke-width="6" />
+                    <ellipse cx="220" cy="88" rx="48" ry="39" fill="#eafcff" stroke="#0b2530" stroke-width="6" />
+                    <g>
+                      <circle cx="100" cy="91" r="18" fill="#071319" />
+                      <circle cx="220" cy="91" r="18" fill="#071319" />
+                      <circle cx="93" cy="82" r="5" fill="#ffffff" />
+                      <circle cx="213" cy="82" r="5" fill="#ffffff" />
+                    </g>
+                  </svg>
+                </div>
+                <span class="dog-muzzle"></span>
+                <span class="dog-nose"></span>
               </div>
-              <span class="robot-nose"></span>
+              <div class="dog-neck"></div>
+              <div class="dog-body-shell">
+                <span class="dog-tail"></span>
+                <span class="dog-chest-light"></span>
+              </div>
+              <span class="dog-leg front-left"></span>
+              <span class="dog-leg front-right"></span>
+              <span class="dog-leg back-left"></span>
+              <span class="dog-leg back-right"></span>
+              <span class="dog-paw paw-front-left"></span>
+              <span class="dog-paw paw-front-right"></span>
+              <span class="dog-paw paw-back-left"></span>
+              <span class="dog-paw paw-back-right"></span>
+              <span class="dog-ground"></span>
             </div>
           </div>
         </div>
@@ -341,6 +358,6 @@
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/face-detection@1.0.3/dist/face-detection.min.js"></script>
-    <script src="./app.js?v=white-blue-1" type="module"></script>
+    <script src="./app.js?v=dog-fullbody-1" type="module"></script>
   </body>
 </html>
