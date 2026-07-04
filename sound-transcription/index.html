@@ -48,6 +48,39 @@
       cursor: not-allowed;
     }
 
+    .level-box {
+      margin-top: 12px;
+      padding: 10px;
+      border-radius: 8px;
+      background: #eef3f7;
+      text-align: left;
+      font-size: 14px;
+      color: #52616b;
+    }
+
+    .level-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 7px;
+      font-weight: bold;
+    }
+
+    .meter {
+      height: 9px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: #d5dce3;
+    }
+
+    #level-bar {
+      display: block;
+      width: 0%;
+      height: 100%;
+      background: linear-gradient(90deg, #f1c40f, #2ecc71);
+      transition: width 100ms linear;
+    }
+
     #transcript {
       width: 100%;
       min-height: 170px;
@@ -103,6 +136,15 @@
     <h1>ver07-01-06</h1>
     <button id="start-btn">録音開始</button>
     <button id="stop-btn" disabled>停止</button>
+
+    <div class="level-box" aria-label="マイク入力レベル">
+      <div class="level-row">
+        <span>マイク入力</span>
+        <span id="level-text">待機中</span>
+      </div>
+      <div class="meter" aria-hidden="true"><span id="level-bar"></span></div>
+    </div>
+
     <textarea id="transcript" placeholder="ここに文字起こし結果が表示されます"></textarea>
     <div class="utility-row">
       <button id="copy-btn" type="button">コピー</button>
@@ -120,10 +162,16 @@
     const clearBtn = document.getElementById("clear-btn");
     const transcript = document.getElementById("transcript");
     const statusText = document.getElementById("status");
+    const levelText = document.getElementById("level-text");
+    const levelBar = document.getElementById("level-bar");
 
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     let recognition = null;
     let audioCtx = null;
+    let analyser = null;
+    let levelData = null;
+    let monitorStream = null;
+    let levelFrame = 0;
     let finalTranscript = "";
 
     function cleanupOldServiceWorker() {
@@ -200,14 +248,103 @@
       }
     }
 
+    async function startLevelMonitor() {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return;
+
+      try {
+        stopLevelMonitor();
+        monitorStream = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            autoGainControl: true,
+            echoCancellation: false,
+            noiseSuppression: false,
+          },
+        });
+
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContext) return;
+
+        audioCtx = audioCtx || new AudioContext();
+        if (audioCtx.state === "suspended") {
+          await audioCtx.resume();
+        }
+
+        const source = audioCtx.createMediaStreamSource(monitorStream);
+        analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 1024;
+        levelData = new Uint8Array(analyser.fftSize);
+        source.connect(analyser);
+        updateLevel();
+      } catch (error) {
+        levelText.textContent = "確認不可";
+      }
+    }
+
+    function stopLevelMonitor() {
+      if (levelFrame) {
+        cancelAnimationFrame(levelFrame);
+        levelFrame = 0;
+      }
+
+      if (monitorStream) {
+        monitorStream.getTracks().forEach((track) => track.stop());
+        monitorStream = null;
+      }
+
+      analyser = null;
+      levelData = null;
+      levelText.textContent = "停止中";
+      levelBar.style.width = "0%";
+    }
+
+    function updateLevel() {
+      if (!analyser || !levelData) return;
+
+      analyser.getByteTimeDomainData(levelData);
+      let sum = 0;
+
+      for (const value of levelData) {
+        const centered = value - 128;
+        sum += centered * centered;
+      }
+
+      const rms = Math.sqrt(sum / levelData.length) / 128;
+      const percent = Math.min(100, Math.round(rms * 260));
+      levelBar.style.width = percent + "%";
+
+      if (percent < 8) {
+        levelText.textContent = "小さい";
+      } else if (percent < 28) {
+        levelText.textContent = "聞き取り中";
+      } else {
+        levelText.textContent = "十分";
+      }
+
+      levelFrame = requestAnimationFrame(updateLevel);
+    }
+
+    function bestTranscript(result) {
+      let best = result[0] ? result[0].transcript : "";
+
+      for (let i = 1; i < result.length; i += 1) {
+        const candidate = result[i].transcript || "";
+        if (candidate.trim().length > best.trim().length) {
+          best = candidate;
+        }
+      }
+
+      return best;
+    }
+
     function createRecognition() {
       const nextRecognition = new SpeechRecognition();
       nextRecognition.lang = "ja-JP";
       nextRecognition.interimResults = true;
       nextRecognition.continuous = true;
+      nextRecognition.maxAlternatives = 3;
 
       nextRecognition.onstart = () => {
-        statusText.textContent = "認識中... 「テスト」や「ワン」と言うと音が鳴ります";
+        statusText.textContent = "認識中... 小さい音でも待ち続けます";
         statusText.style.color = "#2ecc71";
       };
 
@@ -216,7 +353,7 @@
         let interimTranscript = "";
 
         for (let i = event.resultIndex; i < event.results.length; i += 1) {
-          const text = event.results[i][0].transcript;
+          const text = bestTranscript(event.results[i]);
 
           if (event.results[i].isFinal) {
             const cleanText = text.trim();
@@ -246,7 +383,13 @@
       };
 
       nextRecognition.onerror = (event) => {
-        if (event.error !== "aborted" && event.error !== "no-speech") {
+        if (event.error === "no-speech") {
+          statusText.textContent = "音が小さいため待機中です。スマホのマイク側を音源へ向けてください。";
+          statusText.style.color = "#7f8c8d";
+          return;
+        }
+
+        if (event.error !== "aborted") {
           statusText.textContent = "エラー: " + event.error;
           statusText.style.color = "#e74c3c";
         }
@@ -254,18 +397,14 @@
 
       nextRecognition.onend = () => {
         if (startBtn.disabled) {
-          try {
-            nextRecognition.start();
-          } catch (error) {
-            window.setTimeout(() => {
-              try {
-                nextRecognition.start();
-              } catch (retryError) {
-                statusText.textContent = "再開待ち";
-                statusText.style.color = "#7f8c8d";
-              }
-            }, 300);
-          }
+          window.setTimeout(() => {
+            try {
+              nextRecognition.start();
+            } catch (error) {
+              statusText.textContent = "再開待ち";
+              statusText.style.color = "#7f8c8d";
+            }
+          }, 120);
         } else {
           statusText.textContent = "停止しました。";
           statusText.style.color = "#7f8c8d";
@@ -284,6 +423,7 @@
 
       startBtn.addEventListener("click", () => {
         unlockAudio();
+        startLevelMonitor();
         startBtn.disabled = true;
         stopBtn.disabled = false;
 
@@ -298,6 +438,7 @@
       stopBtn.addEventListener("click", () => {
         startBtn.disabled = false;
         stopBtn.disabled = true;
+        stopLevelMonitor();
         recognition.stop();
       });
     }
