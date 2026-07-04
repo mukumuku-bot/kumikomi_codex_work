@@ -26,8 +26,8 @@ const state = {
 };
 
 const PERSON_SCORE_MIN = 0.45;
-const EYE_RANGE_X = 18;
-const EYE_RANGE_Y = 13;
+const EYE_RANGE_X = 30;
+const EYE_RANGE_Y = 20;
 
 startButton.addEventListener("click", start);
 mirrorToggle.addEventListener("change", updateMirrorMode);
