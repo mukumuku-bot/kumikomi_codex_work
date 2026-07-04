@@ -20,6 +20,9 @@ const elements = {
   cameraCheckText: document.querySelector("#cameraCheckText"),
   micCheckText: document.querySelector("#micCheckText"),
   speechCheckText: document.querySelector("#speechCheckText"),
+  checkTranscriptText: document.querySelector("#checkTranscriptText"),
+  volumeText: document.querySelector("#volumeText"),
+  volumeBar: document.querySelector("#volumeBar"),
   browserCheckButton: document.querySelector("#browserCheckButton"),
   cameraCheckButton: document.querySelector("#cameraCheckButton"),
   micCheckButton: document.querySelector("#micCheckButton"),
@@ -61,6 +64,11 @@ const speechState = {
   lastCommandKey: "",
   lastCommandAt: 0,
   audioContext: null,
+  volumeStream: null,
+  volumeAudioContext: null,
+  volumeAnalyser: null,
+  volumeData: null,
+  volumeRafId: null,
 };
 
 const ctx = elements.overlay.getContext("2d");
@@ -101,6 +109,10 @@ function showRouteFromHash() {
 
   if (currentRoute !== "running" && currentRoute !== "check") {
     stopHiddenTranscription();
+  }
+
+  if (currentRoute !== "check") {
+    stopVolumeMeter();
   }
 }
 
@@ -182,7 +194,9 @@ async function checkMic() {
 function checkSpeech() {
   if (speechState.supported) {
     setCheck(elements.speechDot, elements.speechCheckText, "is-ok", "名前を呼ぶ確認を開始しました");
+    elements.checkTranscriptText.textContent = "聞き取り中です";
     startHiddenTranscription();
+    startVolumeMeter();
   } else {
     setCheck(elements.speechDot, elements.speechCheckText, "is-warn", "このブラウザは音声認識に未対応です");
   }
@@ -415,6 +429,7 @@ function setupTranscription() {
     if (event.error === "not-allowed" || event.error === "service-not-allowed") {
       speechState.shouldListen = false;
       setCheck(elements.speechDot, elements.speechCheckText, "is-bad", "マイクまたは音声認識が許可されていません");
+      stopVolumeMeter();
     } else {
       setCheck(elements.speechDot, elements.speechCheckText, "is-warn", "音声認識を開始できませんでした");
     }
@@ -459,6 +474,56 @@ function stopHiddenTranscription() {
   if (speechState.recognition && speechState.listening) {
     speechState.recognition.stop();
   }
+}
+
+async function startVolumeMeter() {
+  if (speechState.volumeAnalyser) return;
+
+  try {
+    speechState.volumeStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    speechState.volumeAudioContext = new AudioContext();
+    const source = speechState.volumeAudioContext.createMediaStreamSource(speechState.volumeStream);
+    speechState.volumeAnalyser = speechState.volumeAudioContext.createAnalyser();
+    speechState.volumeAnalyser.fftSize = 1024;
+    speechState.volumeData = new Uint8Array(speechState.volumeAnalyser.fftSize);
+    source.connect(speechState.volumeAnalyser);
+    updateVolumeMeter();
+  } catch {
+    elements.volumeText.textContent = "--";
+    elements.volumeBar.style.width = "0%";
+    setCheck(elements.micDot, elements.micCheckText, "is-bad", "マイク音量を取得できません");
+  }
+}
+
+function stopVolumeMeter() {
+  if (speechState.volumeRafId) cancelAnimationFrame(speechState.volumeRafId);
+  speechState.volumeRafId = null;
+  speechState.volumeStream?.getTracks().forEach((track) => track.stop());
+  speechState.volumeStream = null;
+  speechState.volumeAudioContext?.close?.().catch(() => {});
+  speechState.volumeAudioContext = null;
+  speechState.volumeAnalyser = null;
+  speechState.volumeData = null;
+  elements.volumeText.textContent = "0%";
+  elements.volumeBar.style.width = "0%";
+}
+
+function updateVolumeMeter() {
+  if (!speechState.volumeAnalyser || !speechState.volumeData) return;
+
+  speechState.volumeAnalyser.getByteTimeDomainData(speechState.volumeData);
+  let sum = 0;
+  for (const value of speechState.volumeData) {
+    const normalized = (value - 128) / 128;
+    sum += normalized * normalized;
+  }
+
+  const rms = Math.sqrt(sum / speechState.volumeData.length);
+  const percent = Math.min(100, Math.round(rms * 260));
+  elements.volumeText.textContent = `${percent}%`;
+  elements.volumeBar.style.width = `${percent}%`;
+  speechState.volumeRafId = requestAnimationFrame(updateVolumeMeter);
 }
 
 function handleVoiceCommand(text) {
@@ -533,8 +598,10 @@ function playBark(audioContext) {
 
 function renderTranscript() {
   const divider = speechState.finalText && speechState.interimText ? "\n" : "";
-  elements.transcriptText.value = `${speechState.finalText}${divider}${speechState.interimText}`.trimStart();
+  const transcript = `${speechState.finalText}${divider}${speechState.interimText}`.trimStart();
+  elements.transcriptText.value = transcript;
   elements.transcriptText.scrollTop = elements.transcriptText.scrollHeight;
+  elements.checkTranscriptText.textContent = transcript.trim() || "聞き取り中です";
 }
 
 function clamp(value, min, max) {

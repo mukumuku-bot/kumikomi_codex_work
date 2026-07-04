@@ -222,6 +222,20 @@
             <button id="speechCheckButton" class="secondary-button" type="button">確認</button>
           </article>
         </div>
+
+        <section class="voice-check-panel" aria-label="音声確認結果">
+          <div class="voice-readout">
+            <span>文字起こし</span>
+            <p id="checkTranscriptText">まだ聞き取っていません</p>
+          </div>
+          <div class="voice-readout">
+            <span>音量</span>
+            <strong id="volumeText">0%</strong>
+            <div class="volume-meter" aria-hidden="true">
+              <span id="volumeBar"></span>
+            </div>
+          </div>
+        </section>
       </section>
 
       <section id="running" class="page" data-page="running" aria-labelledby="runningTitle">
