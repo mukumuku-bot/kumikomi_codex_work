@@ -10,17 +10,6 @@
   </head>
   <body>
     <main class="app-shell">
-      <section class="topbar">
-        <div>
-          <p class="eyebrow">Smartphone Person Detector</p>
-          <h1>人物中心ズレ検知</h1>
-        </div>
-        <button id="startButton" class="primary-button" type="button">
-          <span aria-hidden="true">▶</span>
-          カメラ開始
-        </button>
-      </section>
-
       <section class="eye-stage" aria-label="追従する目">
         <svg
           id="dogEyes"
@@ -41,49 +30,27 @@
             <circle cx="216" cy="80" r="6" fill="#ffffff" />
           </g>
           <g class="blink-lids">
-            <rect class="lid top-lid left-lid" x="46" y="45" width="100" height="42" rx="23" fill="#6f452e" />
-            <rect class="lid top-lid right-lid" x="174" y="45" width="100" height="42" rx="23" fill="#6f452e" />
-            <rect class="lid bottom-lid left-lid" x="46" y="86" width="100" height="42" rx="23" fill="#6f452e" />
-            <rect class="lid bottom-lid right-lid" x="174" y="86" width="100" height="42" rx="23" fill="#6f452e" />
+            <rect class="lid top-lid left-lid" x="46" y="48" width="100" height="26" rx="15" fill="#6f452e" />
+            <rect class="lid top-lid right-lid" x="174" y="48" width="100" height="26" rx="15" fill="#6f452e" />
+            <rect class="lid bottom-lid left-lid" x="46" y="98" width="100" height="26" rx="15" fill="#6f452e" />
+            <rect class="lid bottom-lid right-lid" x="174" y="98" width="100" height="26" rx="15" fill="#6f452e" />
           </g>
           <ellipse cx="160" cy="132" rx="19" ry="13" fill="#2b1a12" />
         </svg>
       </section>
 
-      <section class="camera-panel" aria-label="カメラ映像">
-        <video id="video" playsinline muted autoplay></video>
-        <canvas id="overlay"></canvas>
-        <div class="center-guide" aria-hidden="true">
-          <span class="horizontal"></span>
-          <span class="vertical"></span>
-          <span class="target"></span>
-        </div>
-        <div id="loadingState" class="loading-state">カメラ待機中</div>
-      </section>
-
-      <section class="readout-grid" aria-label="検知結果">
-        <div class="readout-tile main-readout">
-          <span class="label">中心からのズレ</span>
-          <strong id="offsetText">--%</strong>
-          <small id="directionText">人物を検知すると表示します</small>
-        </div>
-        <div class="readout-tile">
-          <span class="label">横方向</span>
-          <strong id="xOffsetText">--%</strong>
-          <small id="xDirectionText">--</small>
-        </div>
-        <div class="readout-tile">
-          <span class="label">縦方向</span>
-          <strong id="yOffsetText">--%</strong>
-          <small id="yDirectionText">--</small>
-        </div>
-        <div class="readout-tile">
-          <span class="label">検知人数</span>
-          <strong id="personCountText">0</strong>
-          <small id="confidenceText">信頼度 --</small>
-        </div>
-      </section>
-
+      <button id="startButton" class="camera-start" type="button" aria-label="カメラ開始"></button>
+      <video id="video" class="hidden-camera" playsinline muted autoplay></video>
+      <canvas id="overlay" class="hidden-camera"></canvas>
+      <div id="loadingState" class="visually-hidden">カメラ待機中</div>
+      <div id="offsetText" class="visually-hidden">--%</div>
+      <div id="directionText" class="visually-hidden">人物を検知すると表示します</div>
+      <div id="xOffsetText" class="visually-hidden">--%</div>
+      <div id="yOffsetText" class="visually-hidden">--%</div>
+      <div id="xDirectionText" class="visually-hidden">--</div>
+      <div id="yDirectionText" class="visually-hidden">--</div>
+      <div id="personCountText" class="visually-hidden">0</div>
+      <div id="confidenceText" class="visually-hidden">信頼度 --</div>
       <input id="mirrorToggle" type="checkbox" checked hidden />
     </main>
 

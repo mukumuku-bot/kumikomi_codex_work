@@ -36,21 +36,17 @@ scheduleBlink();
 
 async function start() {
   startButton.disabled = true;
-  startButton.innerHTML = '<span aria-hidden="true">&#8987;</span> カメラ起動中';
   loadingState.textContent = "内カメラを起動中";
 
   try {
     await startCamera();
     state.running = true;
-    startButton.innerHTML = '<span aria-hidden="true">&#8987;</span> モデル読み込み中';
     loadingState.textContent = "人物検知モデルを読み込み中";
     await loadModel();
-    startButton.innerHTML = '<span aria-hidden="true">&#10003;</span> 検知中';
     loadingState.textContent = "人物を探しています";
     detectLoop();
   } catch (error) {
     startButton.disabled = false;
-    startButton.innerHTML = '<span aria-hidden="true">&#9654;</span> カメラ開始';
     loadingState.textContent = "開始できませんでした";
     directionText.textContent = error.message || "カメラの許可を確認してください";
   }
