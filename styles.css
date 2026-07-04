@@ -156,6 +156,24 @@ canvas {
   transition: transform 130ms ease-out;
 }
 
+.lid {
+  opacity: 0;
+  transition: opacity 90ms ease-in-out, transform 110ms ease-in-out;
+}
+
+.top-lid {
+  transform: translateY(-44px);
+}
+
+.bottom-lid {
+  transform: translateY(44px);
+}
+
+.dog-eyes.is-blinking .lid {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 .mirrored {
   transform: scaleX(-1);
 }

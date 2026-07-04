@@ -32,6 +32,7 @@ const EYE_RANGE_Y = 20;
 startButton.addEventListener("click", start);
 mirrorToggle.addEventListener("change", updateMirrorMode);
 window.addEventListener("resize", resizeOverlay);
+scheduleBlink();
 
 async function start() {
   startButton.disabled = true;
@@ -196,6 +197,19 @@ function updateEyeTracking(xPercent, yPercent) {
   dogEyes.style.setProperty("--look-x", `${state.eyeX.toFixed(1)}px`);
   dogEyes.style.setProperty("--look-y", `${state.eyeY.toFixed(1)}px`);
   pupilGroup.setAttribute("transform", `translate(${state.eyeX.toFixed(1)} ${state.eyeY.toFixed(1)})`);
+}
+
+function scheduleBlink() {
+  const delay = 1800 + Math.random() * 3200;
+  setTimeout(() => {
+    blinkEyes();
+    scheduleBlink();
+  }, delay);
+}
+
+function blinkEyes() {
+  dogEyes.classList.add("is-blinking");
+  setTimeout(() => dogEyes.classList.remove("is-blinking"), 130);
 }
 
 function toDisplayBox([x, y, width, height], displayWidth, displayHeight) {
