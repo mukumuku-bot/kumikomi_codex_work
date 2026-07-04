@@ -104,6 +104,7 @@ const authState = {
 const AUTH_REDIRECT_URL = "https://mukumuku-bot.github.io/kumikomi_codex1-sound-direction/index.html#account";
 
 const ctx = elements.overlay.getContext("2d");
+const BARK_AUDIO_SRC = "./assets/dog-bark.mp3?v=real-bark-1";
 const EYE_RANGE_X = 30;
 const EYE_RANGE_Y = 18;
 const EYE_TRACKING_RESPONSE = 0.42;
@@ -483,14 +484,13 @@ function checkSpeech() {
 }
 
 function checkBark() {
-  const audioContext = ensureBarkAudio();
-  if (!audioContext) {
+  if (typeof Audio !== "function" && !ensureBarkAudio()) {
     setCheck(elements.barkDot, elements.barkCheckText, "is-bad", "このブラウザでは音を再生できません");
     return;
   }
 
   bark(1);
-  setCheck(elements.barkDot, elements.barkCheckText, "is-ok", "リアルなワンを再生しました");
+  setCheck(elements.barkDot, elements.barkCheckText, "is-ok", "犬の鳴き声音声を再生しました");
 }
 
 async function runAllChecks() {
@@ -1007,15 +1007,29 @@ function ensureBarkAudio() {
 }
 
 function bark(count) {
-  const audioContext = ensureBarkAudio();
-  if (!audioContext) return;
-
   for (let index = 0; index < count; index += 1) {
-    window.setTimeout(() => playBark(audioContext), index * 340);
+    window.setTimeout(playBarkSample, index * 360);
   }
 }
 
-function playBark(audioContext) {
+function playBarkSample() {
+  if (typeof Audio !== "function") {
+    playSyntheticBark();
+    return;
+  }
+
+  const audio = new Audio(BARK_AUDIO_SRC);
+  audio.preload = "auto";
+  audio.volume = 0.95;
+  audio.play().catch(() => {
+    playSyntheticBark();
+  });
+}
+
+function playSyntheticBark() {
+  const audioContext = ensureBarkAudio();
+  if (!audioContext) return;
+
   const now = audioContext.currentTime;
   const duration = 0.32;
   const output = audioContext.createGain();
