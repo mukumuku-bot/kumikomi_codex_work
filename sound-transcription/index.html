@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#101828" />
     <title>スマホ文字起こし</title>
     <link rel="manifest" href="./manifest.webmanifest" />
-    <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="./styles.css?v=iphone-dictation-2" />
   </head>
   <body>
     <main class="app-shell">
@@ -18,7 +18,7 @@
 
       <section class="transcription-panel" aria-label="文字起こし">
         <div class="status-row">
-          <span id="transcriptionStatus" class="status-pill">待機中</span>
+          <span id="transcriptionStatus" class="status-pill">端末入力</span>
           <select id="languageSelect" aria-label="文字起こし言語">
             <option value="ja-JP">日本語</option>
             <option value="en-US">English</option>
@@ -27,12 +27,13 @@
 
         <button id="transcribeButton" class="record-button" type="button">
           <span aria-hidden="true"></span>
-          文字起こし開始
+          入力欄を開く
         </button>
 
         <textarea
           id="transcriptText"
           class="transcript-box"
+          inputmode="text"
           placeholder="ここに文字起こし結果が表示されます"
         ></textarea>
 
@@ -43,11 +44,11 @@
         </div>
 
         <p id="transcriptionHelp" class="help-text">
-          AndroidのChromeでは開始ボタンから文字起こしできます。iPhoneでは入力欄を開き、キーボードのマイクボタンで音声入力してください。
+          iPhoneでは「入力欄を開く」を押し、キーボードのマイクボタンで音声入力してください。AndroidのChromeではページ内の文字起こし開始も使えます。
         </p>
       </section>
     </main>
 
-    <script src="./app.js" type="module"></script>
+    <script src="./app.js?v=iphone-dictation-2" type="module"></script>
   </body>
 </html>

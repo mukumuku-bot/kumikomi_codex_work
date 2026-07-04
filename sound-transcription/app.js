@@ -13,7 +13,7 @@ const state = {
   listening: false,
   finalText: "",
   interimText: "",
-  nativeDictation: false,
+  nativeDictation: true,
 };
 
 transcribeButton.addEventListener("click", toggleTranscription);
@@ -26,38 +26,44 @@ languageSelect.addEventListener("change", () => {
   }
 });
 
+cleanupOldServiceWorker();
 setupTranscription();
 
 function setupTranscription() {
   if (!window.isSecureContext) {
-    transcribeButton.disabled = true;
-    transcriptionStatus.textContent = "利用不可";
-    transcriptionHelp.textContent = "マイクを使うにはHTTPSのURLで開いてください。GitHub Pagesの公開URLから開くと利用できます。";
+    setNativeDictationMode("HTTPSの公開URLで開いてください。");
     return;
   }
 
-  if (isAppleMobileBrowser()) {
-    enableNativeDictationMode();
+  if (isAppleMobileBrowser() || !state.supported) {
+    setNativeDictationMode("入力欄を開き、キーボードのマイクボタンで音声入力してください。");
     return;
   }
 
-  if (!state.supported) {
-    enableNativeDictationMode();
-    return;
-  }
+  state.nativeDictation = false;
+  transcriptionStatus.textContent = "待機中";
+  transcribeButton.innerHTML = '<span aria-hidden="true"></span> 文字起こし開始';
+  transcriptionHelp.textContent = "文字起こし開始を押し、マイクの使用を許可してください。";
 }
 
 function isAppleMobileBrowser() {
   const ua = navigator.userAgent || "";
-  const isiOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-  return isiOS;
+  const appleTouchDevice =
+    /iPad|iPhone|iPod/.test(ua) ||
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1) ||
+    (/Apple/.test(navigator.vendor || "") && navigator.maxTouchPoints > 1);
+  const iOSBrowser = /CriOS|FxiOS|EdgiOS|Version\/.+Mobile\/.+Safari/.test(ua);
+  return appleTouchDevice || iOSBrowser;
 }
 
-function enableNativeDictationMode() {
+function setNativeDictationMode(message) {
   state.nativeDictation = true;
+  state.listening = false;
+  state.recognition = null;
   transcriptionStatus.textContent = "端末入力";
+  transcribeButton.classList.remove("is-recording");
   transcribeButton.innerHTML = '<span aria-hidden="true"></span> 入力欄を開く';
-  transcriptionHelp.textContent = "iPhoneではSafariから直接文字起こしを開始できない場合があります。入力欄をタップし、キーボードのマイクボタンで音声入力してください。";
+  transcriptionHelp.textContent = `iPhoneではページ内の音声認識を開始できない場合があります。${message}`;
 }
 
 function createRecognition() {
@@ -67,7 +73,6 @@ function createRecognition() {
   recognition.interimResults = true;
   recognition.maxAlternatives = 1;
   recognition.lang = languageSelect.value;
-
   return recognition;
 }
 
@@ -110,8 +115,15 @@ function attachRecognitionEvents(recognition) {
 
   recognition.addEventListener("error", (event) => {
     state.listening = false;
-    transcriptionStatus.textContent = "エラー";
     transcribeButton.classList.remove("is-recording");
+
+    if (isAppleMobileBrowser() || event.error === "service-not-allowed") {
+      setNativeDictationMode("入力欄をタップし、キーボードのマイクボタンを使ってください。");
+      focusManualDictation();
+      return;
+    }
+
+    transcriptionStatus.textContent = "エラー";
     transcribeButton.innerHTML = '<span aria-hidden="true"></span> 文字起こし開始';
     transcriptionHelp.textContent = getRecognitionErrorMessage(event.error);
   });
@@ -137,6 +149,12 @@ async function toggleTranscription() {
     attachRecognitionEvents(state.recognition);
     state.recognition.start();
   } catch (error) {
+    if (isAppleMobileBrowser()) {
+      setNativeDictationMode("入力欄をタップし、キーボードのマイクボタンを使ってください。");
+      focusManualDictation();
+      return;
+    }
+
     state.listening = false;
     transcriptionStatus.textContent = "エラー";
     transcribeButton.classList.remove("is-recording");
@@ -148,7 +166,6 @@ async function toggleTranscription() {
 function focusManualDictation() {
   transcriptionStatus.textContent = "入力できます";
   transcriptionHelp.textContent = "キーボードが開いたら、マイクボタンを押して話してください。入力された文章はコピーや保存ができます。";
-  transcriptText.removeAttribute("readonly");
   transcriptText.focus();
   transcriptText.setSelectionRange(transcriptText.value.length, transcriptText.value.length);
 }
@@ -209,14 +226,13 @@ function getRecognitionErrorMessage(errorCode) {
     "audio-capture": "マイクが見つかりません。端末のマイク設定を確認してください。",
     "not-allowed": "マイクの使用が許可されていません。ブラウザの権限設定を確認してください。",
     aborted: "音声認識が中断されました。もう一度「文字起こし開始」を押してください。",
-    "bad-grammar": "音声認識の設定を読み込めませんでした。ページを再読み込みしてください。",
     "language-not-supported": "選択した言語はこのブラウザで使えません。日本語またはEnglishを切り替えて試してください。",
     network: "音声認識サービスに接続できません。通信状態を確認してください。",
     "no-speech": "音声を検出できませんでした。もう一度話してください。",
-    "service-not-allowed": "このブラウザでは音声認識サービスを利用できません。AndroidのChromeで開いてください。",
+    "service-not-allowed": "このブラウザではページ内の音声認識を利用できません。入力欄を開いて端末の音声入力を使ってください。",
   };
 
-  return messages[errorCode] || `文字起こしを開始できませんでした。エラー: ${errorCode || "不明"}。AndroidのChrome、HTTPSの公開URL、マイク許可を確認してください。`;
+  return messages[errorCode] || `文字起こしを開始できませんでした。エラー: ${errorCode || "不明"}。`;
 }
 
 function getStartErrorMessage(error) {
@@ -232,34 +248,21 @@ function getStartErrorMessage(error) {
     return "音声認識がまだ停止処理中です。少し待ってからもう一度押してください。";
   }
 
-  return `文字起こしを開始できませんでした。エラー: ${error?.name || error?.message || "不明"}。AndroidのChrome、HTTPSの公開URL、マイク許可を確認してください。`;
+  return `文字起こしを開始できませんでした。エラー: ${error?.name || error?.message || "不明"}。`;
 }
 
-if ("serviceWorker" in navigator) {
-  let refreshing = false;
+function cleanupOldServiceWorker() {
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.getRegistrations()
+      .then((registrations) => Promise.all(registrations.map((registration) => registration.unregister())))
+      .catch(() => {});
+  }
 
-  navigator.serviceWorker.addEventListener("controllerchange", () => {
-    if (refreshing) return;
-    refreshing = true;
-    window.location.reload();
-  });
-
-  navigator.serviceWorker.register("./service-worker.js").then((registration) => {
-    registration.update();
-
-    if (registration.waiting) {
-      registration.waiting.postMessage({ type: "SKIP_WAITING" });
-    }
-
-    registration.addEventListener("updatefound", () => {
-      const worker = registration.installing;
-      if (!worker) return;
-
-      worker.addEventListener("statechange", () => {
-        if (worker.state === "installed" && navigator.serviceWorker.controller) {
-          worker.postMessage({ type: "SKIP_WAITING" });
-        }
-      });
-    });
-  }).catch(() => {});
+  if ("caches" in window) {
+    caches.keys()
+      .then((names) => Promise.all(names
+        .filter((name) => name.startsWith("transcription-only-") || name.startsWith("sound-bearing-transcription-"))
+        .map((name) => caches.delete(name))))
+      .catch(() => {});
+  }
 }
