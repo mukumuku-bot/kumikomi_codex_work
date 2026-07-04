@@ -126,92 +126,34 @@ canvas {
   pointer-events: none;
 }
 
+.eye-stage {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 188px;
+  margin: 0 0 12px;
+  padding: 10px 0 16px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgba(45, 212, 191, 0.1), rgba(15, 23, 42, 0.36)),
+    #172033;
+}
+
 .dog-eyes {
   --look-x: 0px;
   --look-y: 0px;
-  position: absolute;
-  left: 50%;
-  top: 18px;
-  z-index: 6;
-  width: min(72vw, 310px);
-  height: 154px;
-  border: 2px solid rgba(255, 255, 255, 0.32);
-  border-radius: 999px 999px 38px 38px;
-  background:
-    radial-gradient(circle at 25% 20%, rgba(255, 255, 255, 0.16), transparent 26%),
-    linear-gradient(145deg, rgba(166, 104, 63, 0.96), rgba(82, 50, 32, 0.94));
+  position: relative;
+  z-index: 10;
+  display: block;
+  width: min(84vw, 360px);
+  height: auto;
   pointer-events: none;
-  transform: translateX(-50%);
-  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.44);
   filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.42));
 }
 
-.eye {
-  position: absolute;
-  top: 46px;
-  width: 92px;
-  height: 76px;
-  border: 3px solid rgba(64, 37, 22, 0.88);
-  border-radius: 52% 48% 50% 50%;
-  background:
-    radial-gradient(circle at 35% 28%, rgba(255, 255, 255, 0.96) 0 9px, transparent 10px),
-    linear-gradient(145deg, #fff8ec 0%, #f2dbc0 100%);
-}
-
-.left-eye {
-  left: 34px;
-  transform: rotate(-5deg);
-}
-
-.right-eye {
-  right: 34px;
-  transform: rotate(5deg);
-}
-
-.pupil {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 36px;
-  height: 40px;
-  border-radius: 50%;
-  background:
-    radial-gradient(circle at 36% 26%, #ffffff 0 5px, transparent 6px),
-    radial-gradient(circle at 50% 54%, #111827 0 58%, #2f1d12 60% 100%);
-  transform: translate(calc(-50% + var(--look-x)), calc(-50% + var(--look-y)));
+#pupilGroup {
   transition: transform 130ms ease-out;
-}
-
-.brow {
-  position: absolute;
-  top: 28px;
-  width: 94px;
-  height: 18px;
-  border-radius: 999px;
-  background: linear-gradient(90deg, #7c4a2d, #3f2618);
-  opacity: 0.9;
-}
-
-.left-brow {
-  left: 32px;
-  transform: rotate(-9deg);
-}
-
-.right-brow {
-  right: 32px;
-  transform: rotate(9deg);
-}
-
-.muzzle {
-  position: absolute;
-  left: 50%;
-  bottom: 18px;
-  width: 32px;
-  height: 22px;
-  border-radius: 50% 50% 58% 58%;
-  background: #2b1a12;
-  transform: translateX(-50%);
-  opacity: 0.88;
 }
 
 .mirrored {

@@ -3,6 +3,7 @@ const mirrorToggle = document.querySelector("#mirrorToggle");
 const video = document.querySelector("#video");
 const overlay = document.querySelector("#overlay");
 const dogEyes = document.querySelector("#dogEyes");
+const pupilGroup = document.querySelector("#pupilGroup");
 const loadingState = document.querySelector("#loadingState");
 const offsetText = document.querySelector("#offsetText");
 const directionText = document.querySelector("#directionText");
@@ -194,6 +195,7 @@ function updateEyeTracking(xPercent, yPercent) {
 
   dogEyes.style.setProperty("--look-x", `${state.eyeX.toFixed(1)}px`);
   dogEyes.style.setProperty("--look-y", `${state.eyeY.toFixed(1)}px`);
+  pupilGroup.setAttribute("transform", `translate(${state.eyeX.toFixed(1)} ${state.eyeY.toFixed(1)})`);
 }
 
 function toDisplayBox([x, y, width, height], displayWidth, displayHeight) {

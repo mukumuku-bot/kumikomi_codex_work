@@ -21,6 +21,29 @@
         </button>
       </section>
 
+      <section class="eye-stage" aria-label="追従する目">
+        <svg
+          id="dogEyes"
+          class="dog-eyes"
+          viewBox="0 0 320 170"
+          role="img"
+          aria-label="人を追いかける犬風の目"
+        >
+          <rect x="10" y="8" width="300" height="150" rx="58" fill="#8b5a3c" stroke="#f8efe3" stroke-width="5" />
+          <path d="M32 44 C58 20, 98 21, 124 47" fill="none" stroke="#3a2418" stroke-width="14" stroke-linecap="round" />
+          <path d="M196 47 C222 21, 262 20, 288 44" fill="none" stroke="#3a2418" stroke-width="14" stroke-linecap="round" />
+          <ellipse cx="96" cy="86" rx="50" ry="42" fill="#fff7ea" stroke="#3a2418" stroke-width="5" />
+          <ellipse cx="224" cy="86" rx="50" ry="42" fill="#fff7ea" stroke="#3a2418" stroke-width="5" />
+          <g id="pupilGroup">
+            <ellipse cx="96" cy="90" rx="18" ry="23" fill="#1b1410" />
+            <ellipse cx="224" cy="90" rx="18" ry="23" fill="#1b1410" />
+            <circle cx="88" cy="80" r="6" fill="#ffffff" />
+            <circle cx="216" cy="80" r="6" fill="#ffffff" />
+          </g>
+          <ellipse cx="160" cy="132" rx="19" ry="13" fill="#2b1a12" />
+        </svg>
+      </section>
+
       <section class="camera-panel" aria-label="カメラ映像">
         <video id="video" playsinline muted autoplay></video>
         <canvas id="overlay"></canvas>
@@ -28,17 +51,6 @@
           <span class="horizontal"></span>
           <span class="vertical"></span>
           <span class="target"></span>
-        </div>
-        <div id="dogEyes" class="dog-eyes" aria-hidden="true">
-          <span class="brow left-brow"></span>
-          <span class="brow right-brow"></span>
-          <span class="eye left-eye">
-            <span class="pupil"></span>
-          </span>
-          <span class="eye right-eye">
-            <span class="pupil"></span>
-          </span>
-          <span class="muzzle"></span>
         </div>
         <div id="loadingState" class="loading-state">カメラ待機中</div>
       </section>
