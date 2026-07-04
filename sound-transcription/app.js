@@ -1,5 +1,6 @@
 const startButton = document.querySelector("#transcribeButton");
 const stopButton = document.querySelector("#stopButton");
+const distantModeToggle = document.querySelector("#distantModeToggle");
 const languageSelect = document.querySelector("#languageSelect");
 const copyTranscriptButton = document.querySelector("#copyTranscriptButton");
 const downloadTranscriptButton = document.querySelector("#downloadTranscriptButton");
@@ -7,12 +8,18 @@ const clearTranscriptButton = document.querySelector("#clearTranscriptButton");
 const transcriptText = document.querySelector("#transcriptText");
 const transcriptionStatus = document.querySelector("#transcriptionStatus");
 const transcriptionHelp = document.querySelector("#transcriptionHelp");
+const levelText = document.querySelector("#levelText");
+const levelBar = document.querySelector("#levelBar");
 
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
 const state = {
   recognition: null,
   audioContext: null,
+  analyser: null,
+  levelData: null,
+  monitorStream: null,
+  levelFrame: 0,
   shouldListen: false,
   finalText: "",
   interimText: "",
@@ -82,6 +89,12 @@ function createRecognition() {
   recognition.onerror = (event) => {
     if (event.error === "aborted" && !state.shouldListen) return;
 
+    if (event.error === "no-speech" && state.shouldListen && distantModeToggle.checked) {
+      transcriptionStatus.textContent = "聞き取り継続中";
+      transcriptionHelp.textContent = "音が小さいため待機を続けています。スマホのマイク側を音源へ向けてください。";
+      return;
+    }
+
     if (event.error === "service-not-allowed" || event.error === "not-allowed") {
       enableFallback(getRecognitionErrorMessage(event.error));
       focusManualInput();
@@ -100,7 +113,7 @@ function createRecognition() {
         } catch (error) {
           transcriptionStatus.textContent = "再開待ち";
         }
-      }, 250);
+      }, distantModeToggle.checked ? 120 : 300);
       return;
     }
 
@@ -125,6 +138,7 @@ function startTranscription() {
 
   try {
     state.recognition.start();
+    startLevelMonitor();
   } catch (error) {
     transcriptionStatus.textContent = "エラー";
     transcriptionHelp.textContent = getStartErrorMessage(error);
@@ -137,6 +151,7 @@ function startTranscription() {
 function stopTranscription() {
   state.shouldListen = false;
   stopButton.disabled = true;
+  stopLevelMonitor();
 
   try {
     state.recognition?.stop();
@@ -165,6 +180,81 @@ function unlockAudio() {
   }
 }
 
+async function startLevelMonitor() {
+  if (!distantModeToggle.checked || !navigator.mediaDevices?.getUserMedia) return;
+
+  try {
+    stopLevelMonitor();
+    state.monitorStream = await navigator.mediaDevices.getUserMedia({
+      audio: {
+        autoGainControl: true,
+        echoCancellation: false,
+        noiseSuppression: false,
+      },
+    });
+
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) return;
+
+    state.audioContext ||= new AudioContext();
+    if (state.audioContext.state === "suspended") {
+      await state.audioContext.resume();
+    }
+
+    const source = state.audioContext.createMediaStreamSource(state.monitorStream);
+    state.analyser = state.audioContext.createAnalyser();
+    state.analyser.fftSize = 1024;
+    state.levelData = new Uint8Array(state.analyser.fftSize);
+    source.connect(state.analyser);
+    updateLevelMeter();
+  } catch (error) {
+    levelText.textContent = "確認不可";
+  }
+}
+
+function stopLevelMonitor() {
+  if (state.levelFrame) {
+    cancelAnimationFrame(state.levelFrame);
+    state.levelFrame = 0;
+  }
+
+  if (state.monitorStream) {
+    state.monitorStream.getTracks().forEach((track) => track.stop());
+    state.monitorStream = null;
+  }
+
+  state.analyser = null;
+  state.levelData = null;
+  levelText.textContent = "停止中";
+  levelBar.style.width = "0%";
+}
+
+function updateLevelMeter() {
+  if (!state.analyser || !state.levelData) return;
+
+  state.analyser.getByteTimeDomainData(state.levelData);
+  let sum = 0;
+
+  for (const value of state.levelData) {
+    const centered = value - 128;
+    sum += centered * centered;
+  }
+
+  const rms = Math.sqrt(sum / state.levelData.length) / 128;
+  const percent = Math.min(100, Math.round(rms * 240));
+  levelBar.style.width = `${percent}%`;
+
+  if (percent < 8) {
+    levelText.textContent = "小さい";
+  } else if (percent < 28) {
+    levelText.textContent = "聞き取り中";
+  } else {
+    levelText.textContent = "十分";
+  }
+
+  state.levelFrame = requestAnimationFrame(updateLevelMeter);
+}
+
 function enableFallback(message) {
   state.fallbackMode = true;
   state.shouldListen = false;
@@ -174,6 +264,7 @@ function enableFallback(message) {
   startButton.innerHTML = '<span aria-hidden="true"></span> 入力欄を開く';
   transcriptionStatus.textContent = "端末入力";
   transcriptionHelp.textContent = message;
+  levelText.textContent = "端末入力";
 }
 
 function focusManualInput() {

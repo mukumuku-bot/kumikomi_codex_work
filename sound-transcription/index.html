@@ -33,6 +33,19 @@
           <button id="stopButton" class="stop-button" type="button" disabled>停止</button>
         </div>
 
+        <label class="distant-toggle">
+          <input id="distantModeToggle" type="checkbox" checked />
+          <span>遠くの音モード</span>
+        </label>
+
+        <div class="level-panel" aria-label="マイク入力レベル">
+          <div class="level-row">
+            <span>マイク入力</span>
+            <strong id="levelText">待機中</strong>
+          </div>
+          <div class="level-meter" aria-hidden="true"><span id="levelBar"></span></div>
+        </div>
+
         <textarea
           id="transcriptText"
           class="transcript-box"
@@ -47,11 +60,11 @@
         </div>
 
         <p id="transcriptionHelp" class="help-text">
-          文字起こし開始を押して、マイクの使用を許可してください。iPhoneで開始できない場合は入力欄をタップし、キーボードのマイクボタンを使ってください。
+          遠くの音モードでは、聞き取りが途切れても自動で再開します。マイク入力が小さい場合は、スマホのマイク側を音源へ向けてください。
         </p>
       </section>
     </main>
 
-    <script src="./app.js?v=recognition-loop-1" type="module"></script>
+    <script src="./app.js?v=far-audio-1" type="module"></script>
   </body>
 </html>
