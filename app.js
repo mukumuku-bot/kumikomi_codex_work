@@ -15,6 +15,7 @@ const elements = {
   loginForm: document.querySelector("#loginForm"),
   loginEmail: document.querySelector("#loginEmail"),
   loginPassword: document.querySelector("#loginPassword"),
+  resendConfirmationButton: document.querySelector("#resendConfirmationButton"),
   logoutButton: document.querySelector("#logoutButton"),
   currentAccountText: document.querySelector("#currentAccountText"),
   currentDogNameText: document.querySelector("#currentDogNameText"),
@@ -99,6 +100,7 @@ const authState = {
   user: null,
   session: null,
 };
+const AUTH_REDIRECT_URL = "https://mukumuku-bot.github.io/kumikomi_codex1-sound-direction/index.html#account";
 
 const ctx = elements.overlay.getContext("2d");
 const EYE_RANGE_X = 30;
@@ -110,6 +112,7 @@ window.addEventListener("hashchange", showRouteFromHash);
 window.addEventListener("resize", resizeOverlay);
 elements.signUpForm.addEventListener("submit", createAccount);
 elements.loginForm.addEventListener("submit", loginAccount);
+elements.resendConfirmationButton.addEventListener("click", resendConfirmationEmail);
 elements.logoutButton.addEventListener("click", logoutAccount);
 elements.settingsForm.addEventListener("submit", saveSettingsFromForm);
 elements.resetSettingsButton.addEventListener("click", resetSettings);
@@ -223,6 +226,7 @@ async function createAccount(event) {
     email,
     password,
     options: {
+      emailRedirectTo: AUTH_REDIRECT_URL,
       data: { dog_name: dogName },
     },
   });
@@ -267,6 +271,36 @@ async function loginAccount(event) {
   authState.session = data.session;
   authState.user = data.user;
   await syncAccountSettings();
+}
+
+async function resendConfirmationEmail() {
+  if (!supabaseClient) {
+    updateAccountUi("Supabaseが未設定のため、確認メールを再送できません。", "is-bad");
+    return;
+  }
+
+  const email = elements.loginEmail.value.trim() || elements.signUpEmail.value.trim();
+  if (!email) {
+    updateAccountUi("確認メールを再送するメールアドレスを入力してください。", "is-warn");
+    elements.loginEmail.focus();
+    return;
+  }
+
+  updateAccountUi("確認メールを再送しています", "");
+  const { error } = await supabaseClient.auth.resend({
+    type: "signup",
+    email,
+    options: {
+      emailRedirectTo: AUTH_REDIRECT_URL,
+    },
+  });
+
+  if (error) {
+    updateAccountUi(`確認メールを再送できません: ${error.message}`, "is-bad");
+    return;
+  }
+
+  updateAccountUi("確認メールを再送しました。迷惑メールフォルダも確認してください。", "is-ok");
 }
 
 async function logoutAccount() {
@@ -341,6 +375,7 @@ function updateAccountUi(message, statusClass = "") {
   elements.loginForm.querySelectorAll("input, button").forEach((node) => {
     node.disabled = !configured;
   });
+  elements.resendConfirmationButton.disabled = !configured;
   elements.logoutButton.disabled = !loggedIn;
   elements.currentAccountText.textContent = loggedIn ? `ログイン中: ${authState.user.email}` : "未ログイン";
   elements.currentDogNameText.textContent = `犬の名前: ${settings.dogName || defaultSettings.dogName}`;
