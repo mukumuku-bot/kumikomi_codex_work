@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#101828" />
     <title>スマホ犬（Smartphone Dog）</title>
     <link rel="manifest" href="./manifest.webmanifest" />
-    <link rel="stylesheet" href="./styles.css?v=alsok-inspired-6" />
+    <link rel="stylesheet" href="./styles.css?v=alsok-inspired-7" />
   </head>
   <body>
     <header class="topbar">
@@ -260,22 +260,67 @@
           </section>
 
           <section class="run-stage" aria-label="人物を追いかける目">
-            <svg id="dogEyes" class="dog-eyes" viewBox="0 0 320 170" role="img" aria-label="人物を追いかける目">
-              <path d="M56 54 Q100 26 144 54" fill="none" stroke="#89d8ff" stroke-width="8" stroke-linecap="round" />
-              <path d="M176 54 Q220 26 264 54" fill="none" stroke="#89d8ff" stroke-width="8" stroke-linecap="round" />
-              <ellipse cx="100" cy="88" rx="48" ry="39" fill="#eafcff" stroke="#0b2530" stroke-width="6" />
-              <ellipse cx="220" cy="88" rx="48" ry="39" fill="#eafcff" stroke="#0b2530" stroke-width="6" />
-              <g id="pupilGroup">
-                <circle cx="100" cy="91" r="18" fill="#071319" />
-                <circle cx="220" cy="91" r="18" fill="#071319" />
-                <circle cx="93" cy="82" r="5" fill="#ffffff" />
-                <circle cx="213" cy="82" r="5" fill="#ffffff" />
+            <svg id="dogEyes" class="dog-eyes" viewBox="0 0 380 220" role="img" aria-label="人物を追いかける目">
+              <defs>
+                <radialGradient id="irisGlow" cx="42%" cy="38%" r="68%">
+                  <stop offset="0%" stop-color="#f7fdff" />
+                  <stop offset="34%" stop-color="#58c9ff" />
+                  <stop offset="68%" stop-color="#3478ff" />
+                  <stop offset="100%" stop-color="#10236b" />
+                </radialGradient>
+                <radialGradient id="pupilGlow" cx="42%" cy="34%" r="70%">
+                  <stop offset="0%" stop-color="#1a3342" />
+                  <stop offset="58%" stop-color="#061019" />
+                  <stop offset="100%" stop-color="#02070d" />
+                </radialGradient>
+                <linearGradient id="lidShade" x1="0" x2="0" y1="0" y2="1">
+                  <stop offset="0%" stop-color="#182538" />
+                  <stop offset="100%" stop-color="#07101d" />
+                </linearGradient>
+                <filter id="blueEyeGlow" x="-55%" y="-55%" width="210%" height="210%">
+                  <feGaussianBlur stdDeviation="4.5" result="blur" />
+                  <feColorMatrix in="blur" type="matrix" values="0 0 0 0 0.24 0 0 0 0 0.68 0 0 0 0 1 0 0 0 0.92 0" result="glow" />
+                  <feMerge>
+                    <feMergeNode in="glow" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+              </defs>
+
+              <path class="eye-brow" d="M63 72 Q105 43 147 72" />
+              <path class="eye-brow" d="M233 72 Q275 43 317 72" />
+
+              <g class="eye-shell">
+                <ellipse class="eye-aura" cx="105" cy="124" rx="58" ry="64" />
+                <ellipse class="eye-aura" cx="275" cy="124" rx="58" ry="64" />
+                <ellipse class="eye-rim" cx="105" cy="124" rx="42" ry="48" />
+                <ellipse class="eye-rim" cx="275" cy="124" rx="42" ry="48" />
               </g>
+
+              <g id="pupilGroup">
+                <g class="eye-orb">
+                  <circle class="iris" cx="105" cy="124" r="42" fill="url(#irisGlow)" filter="url(#blueEyeGlow)" />
+                  <circle class="iris-line" cx="105" cy="124" r="33" />
+                  <circle class="pupil" cx="105" cy="124" r="24" fill="url(#pupilGlow)" />
+                  <circle class="catchlight main" cx="91" cy="103" r="9" />
+                  <circle class="catchlight sub" cx="122" cy="113" r="5" />
+                </g>
+                <g class="eye-orb">
+                  <circle class="iris" cx="275" cy="124" r="42" fill="url(#irisGlow)" filter="url(#blueEyeGlow)" />
+                  <circle class="iris-line" cx="275" cy="124" r="33" />
+                  <circle class="pupil" cx="275" cy="124" r="24" fill="url(#pupilGlow)" />
+                  <circle class="catchlight main" cx="261" cy="103" r="9" />
+                  <circle class="catchlight sub" cx="292" cy="113" r="5" />
+                </g>
+              </g>
+
               <g class="blink-lids">
-                <rect class="lid top-lid" x="52" y="58" width="96" height="23" rx="12" fill="#182536" />
-                <rect class="lid top-lid" x="172" y="58" width="96" height="23" rx="12" fill="#182536" />
-                <rect class="lid bottom-lid" x="52" y="99" width="96" height="23" rx="12" fill="#182536" />
-                <rect class="lid bottom-lid" x="172" y="99" width="96" height="23" rx="12" fill="#182536" />
+                <ellipse class="lid upper-lid" cx="105" cy="88" rx="58" ry="44" fill="url(#lidShade)" />
+                <ellipse class="lid lower-lid" cx="105" cy="160" rx="58" ry="44" fill="url(#lidShade)" />
+                <ellipse class="lid upper-lid" cx="275" cy="88" rx="58" ry="44" fill="url(#lidShade)" />
+                <ellipse class="lid lower-lid" cx="275" cy="160" rx="58" ry="44" fill="url(#lidShade)" />
+                <path class="closed-eye-line" d="M65 126 Q105 139 145 126" />
+                <path class="closed-eye-line" d="M235 126 Q275 139 315 126" />
               </g>
             </svg>
             <video id="video" class="hidden-camera" playsinline muted autoplay></video>
@@ -321,6 +366,6 @@
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/face-detection@1.0.3/dist/face-detection.min.js"></script>
-    <script src="./app.js?v=alsok-inspired-6" type="module"></script>
+    <script src="./app.js?v=alsok-inspired-7" type="module"></script>
   </body>
 </html>

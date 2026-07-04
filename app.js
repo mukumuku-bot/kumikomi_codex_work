@@ -283,6 +283,7 @@ async function startRun() {
     if (runState.running) stopRun();
     runState.running = true;
     updateRunningViewMode();
+    wakeEyes();
     await new Promise((resolve) => requestAnimationFrame(resolve));
 
     const stream = await navigator.mediaDevices.getUserMedia({
@@ -302,7 +303,7 @@ async function startRun() {
     if (detectionReady) {
       detectLoop();
     } else {
-      sleepEyes();
+      wakeEyes();
     }
   } catch (error) {
     stopStream(runState.stream);
@@ -311,7 +312,7 @@ async function startRun() {
     updateRunningViewMode();
     elements.runStatusText.textContent = getMediaErrorMessage(error, "カメラ");
     elements.stopRunButton.disabled = false;
-    sleepEyes();
+    wakeEyes();
   }
 }
 
@@ -562,7 +563,7 @@ function scheduleBlink() {
 function blinkEyes() {
   if (runState.sleeping) return;
   elements.dogEyes.classList.add("is-blinking");
-  setTimeout(() => elements.dogEyes.classList.remove("is-blinking"), 130);
+  setTimeout(() => elements.dogEyes.classList.remove("is-blinking"), 190);
 }
 
 function sleepEyes() {

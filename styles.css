@@ -893,43 +893,110 @@ body.is-running-page .run-stage,
 
 .dog-eyes {
   display: block;
-  width: min(118vw, 980px);
-  max-height: calc(100svh - 220px);
+  width: min(126vw, 1120px);
+  max-height: calc(100svh - 160px);
+  overflow: visible;
   pointer-events: none;
-  filter: drop-shadow(0 18px 32px rgba(0, 0, 0, 0.44));
+  filter: drop-shadow(0 22px 42px rgba(0, 0, 0, 0.5));
 }
 
 body.is-running-page .dog-eyes,
 .person-run-screen.is-live .dog-eyes {
-  width: min(118vw, 1120px);
-  max-height: 98svh;
+  width: min(136vw, 1320px);
+  max-height: 100svh;
 }
 
 #pupilGroup {
-  transition: transform 130ms ease-out, opacity 160ms ease-out;
+  transition: transform 140ms ease-out, opacity 180ms ease-out;
+}
+
+.eye-brow {
+  fill: none;
+  stroke: #5ca8ff;
+  stroke-width: 8;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 8px rgba(92, 168, 255, 0.68));
+}
+
+.eye-aura {
+  fill: rgba(43, 157, 255, 0.12);
+  filter: blur(1px) drop-shadow(0 0 20px rgba(77, 185, 255, 0.42));
+}
+
+.eye-rim {
+  fill: none;
+  stroke: rgba(134, 222, 255, 0.42);
+  stroke-width: 3;
+  filter: drop-shadow(0 0 18px rgba(75, 188, 255, 0.5));
+}
+
+.iris {
+  fill: url("#irisGlow");
+  filter: url("#blueEyeGlow");
+}
+
+.iris-line {
+  fill: none;
+  stroke: rgba(236, 252, 255, 0.92);
+  stroke-width: 3;
+}
+
+.pupil {
+  fill: url("#pupilGlow");
+  stroke: rgba(4, 14, 22, 0.88);
+  stroke-width: 3;
+}
+
+.catchlight {
+  fill: #ffffff;
+  filter: drop-shadow(0 0 7px rgba(255, 255, 255, 0.72));
+}
+
+.catchlight.sub {
+  opacity: 0.78;
 }
 
 .lid {
+  fill: url("#lidShade");
   opacity: 0;
-  transition: opacity 80ms ease-in-out, transform 110ms ease-in-out;
+  transform-box: fill-box;
+  transform-origin: center;
+  transition:
+    opacity 80ms ease-in-out,
+    transform 170ms cubic-bezier(0.2, 0.82, 0.2, 1);
 }
 
-.top-lid {
-  transform: translateY(-30px);
+.upper-lid {
+  transform: translateY(-56px) scaleY(0.62);
 }
 
-.bottom-lid {
-  transform: translateY(30px);
+.lower-lid {
+  transform: translateY(56px) scaleY(0.62);
+}
+
+.closed-eye-line {
+  fill: none;
+  stroke: #65c8ff;
+  stroke-width: 7;
+  stroke-linecap: round;
+  opacity: 0;
+  filter: drop-shadow(0 0 10px rgba(101, 200, 255, 0.75));
+  transition: opacity 120ms ease-in-out;
 }
 
 .dog-eyes.is-blinking .lid,
 .dog-eyes.is-sleeping .lid {
   opacity: 1;
-  transform: translateY(0);
+  transform: translateY(0) scaleY(1.08);
+}
+
+.dog-eyes.is-blinking .closed-eye-line,
+.dog-eyes.is-sleeping .closed-eye-line {
+  opacity: 0.82;
 }
 
 .dog-eyes.is-sleeping #pupilGroup {
-  opacity: 0.08;
+  opacity: 0;
 }
 
 .hidden-camera {
