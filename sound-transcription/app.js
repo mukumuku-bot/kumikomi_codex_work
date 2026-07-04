@@ -28,18 +28,36 @@ languageSelect.addEventListener("change", () => {
 setupTranscription();
 
 function setupTranscription() {
-  if (!state.supported) {
+  if (!window.isSecureContext) {
     transcribeButton.disabled = true;
-    transcriptionStatus.textContent = "非対応";
-    transcriptionHelp.textContent = "このブラウザは音声認識に対応していません。AndroidのChromeなどで開いてください。";
+    transcriptionStatus.textContent = "利用不可";
+    transcriptionHelp.textContent = "マイクを使うにはHTTPSのURLで開いてください。GitHub Pagesの公開URLから開くと利用できます。";
     return;
   }
 
+  if (!state.supported) {
+    transcribeButton.disabled = true;
+    transcriptionStatus.textContent = "非対応";
+    transcriptionHelp.textContent = "このブラウザは音声認識に対応していません。AndroidのChromeで開いてください。iPhoneのSafariやアプリ内ブラウザでは使えない場合があります。";
+    return;
+  }
+}
+
+function createRecognition() {
   const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   const recognition = new Recognition();
   recognition.continuous = true;
   recognition.interimResults = true;
+  recognition.maxAlternatives = 1;
   recognition.lang = languageSelect.value;
+
+  return recognition;
+}
+
+function attachRecognitionEvents(recognition) {
+  recognition.addEventListener("audiostart", () => {
+    transcriptionHelp.textContent = "マイク入力を確認しました。話した内容が下に表示されます。";
+  });
 
   recognition.addEventListener("start", () => {
     state.listening = true;
@@ -80,26 +98,36 @@ function setupTranscription() {
     transcribeButton.innerHTML = '<span aria-hidden="true"></span> 文字起こし開始';
     transcriptionHelp.textContent = getRecognitionErrorMessage(event.error);
   });
-
-  state.recognition = recognition;
 }
 
-function toggleTranscription() {
-  if (!state.recognition) return;
-
+async function toggleTranscription() {
   if (state.listening) {
-    state.recognition.stop();
+    state.recognition?.stop();
     return;
   }
 
-  transcriptionHelp.textContent = "話した内容が下に表示されます。必要に応じてコピーまたは保存できます。";
-  state.recognition.lang = languageSelect.value;
+  transcriptionStatus.textContent = "準備中";
+  transcriptionHelp.textContent = "マイクの使用許可を確認しています。";
 
   try {
+    await ensureMicrophonePermission();
+    state.recognition = createRecognition();
+    attachRecognitionEvents(state.recognition);
     state.recognition.start();
   } catch (error) {
-    transcriptionStatus.textContent = "起動待ち";
+    state.listening = false;
+    transcriptionStatus.textContent = "エラー";
+    transcribeButton.classList.remove("is-recording");
+    transcribeButton.innerHTML = '<span aria-hidden="true"></span> 文字起こし開始';
+    transcriptionHelp.textContent = getStartErrorMessage(error);
   }
+}
+
+async function ensureMicrophonePermission() {
+  if (!navigator.mediaDevices?.getUserMedia) return;
+
+  const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  stream.getTracks().forEach((track) => track.stop());
 }
 
 function renderTranscript() {
@@ -150,11 +178,31 @@ function getRecognitionErrorMessage(errorCode) {
   const messages = {
     "audio-capture": "マイクが見つかりません。端末のマイク設定を確認してください。",
     "not-allowed": "マイクの使用が許可されていません。ブラウザの権限設定を確認してください。",
+    aborted: "音声認識が中断されました。もう一度「文字起こし開始」を押してください。",
+    "bad-grammar": "音声認識の設定を読み込めませんでした。ページを再読み込みしてください。",
+    "language-not-supported": "選択した言語はこのブラウザで使えません。日本語またはEnglishを切り替えて試してください。",
     network: "音声認識サービスに接続できません。通信状態を確認してください。",
     "no-speech": "音声を検出できませんでした。もう一度話してください。",
+    "service-not-allowed": "このブラウザでは音声認識サービスを利用できません。AndroidのChromeで開いてください。",
   };
 
-  return messages[errorCode] || "文字起こしを開始できませんでした。ブラウザや権限設定を確認してください。";
+  return messages[errorCode] || `文字起こしを開始できませんでした。エラー: ${errorCode || "不明"}。AndroidのChrome、HTTPSの公開URL、マイク許可を確認してください。`;
+}
+
+function getStartErrorMessage(error) {
+  if (error?.name === "NotAllowedError" || error?.name === "PermissionDeniedError") {
+    return "マイクの使用が許可されていません。ブラウザの権限設定でマイクを許可してください。";
+  }
+
+  if (error?.name === "NotFoundError" || error?.name === "DevicesNotFoundError") {
+    return "マイクが見つかりません。端末のマイク設定を確認してください。";
+  }
+
+  if (error?.name === "InvalidStateError") {
+    return "音声認識がまだ停止処理中です。少し待ってからもう一度押してください。";
+  }
+
+  return `文字起こしを開始できませんでした。エラー: ${error?.name || error?.message || "不明"}。AndroidのChrome、HTTPSの公開URL、マイク許可を確認してください。`;
 }
 
 if ("serviceWorker" in navigator) {
