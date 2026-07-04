@@ -1,4 +1,5 @@
-const transcribeButton = document.querySelector("#transcribeButton");
+const startButton = document.querySelector("#transcribeButton");
+const stopButton = document.querySelector("#stopButton");
 const languageSelect = document.querySelector("#languageSelect");
 const copyTranscriptButton = document.querySelector("#copyTranscriptButton");
 const downloadTranscriptButton = document.querySelector("#downloadTranscriptButton");
@@ -7,16 +8,19 @@ const transcriptText = document.querySelector("#transcriptText");
 const transcriptionStatus = document.querySelector("#transcriptionStatus");
 const transcriptionHelp = document.querySelector("#transcriptionHelp");
 
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
 const state = {
   recognition: null,
-  supported: Boolean(window.SpeechRecognition || window.webkitSpeechRecognition),
-  listening: false,
+  audioContext: null,
+  shouldListen: false,
   finalText: "",
   interimText: "",
-  nativeDictation: true,
+  fallbackMode: false,
 };
 
-transcribeButton.addEventListener("click", toggleTranscription);
+startButton.addEventListener("click", startTranscription);
+stopButton.addEventListener("click", stopTranscription);
 copyTranscriptButton.addEventListener("click", copyTranscript);
 downloadTranscriptButton.addEventListener("click", downloadTranscript);
 clearTranscriptButton.addEventListener("click", clearTranscript);
@@ -31,150 +35,152 @@ setupTranscription();
 
 function setupTranscription() {
   if (!window.isSecureContext) {
-    setNativeDictationMode("HTTPSの公開URLで開いてください。");
+    enableFallback("HTTPSの公開URLで開いてください。");
     return;
   }
 
-  if (isAppleMobileBrowser() || !state.supported) {
-    setNativeDictationMode("入力欄を開き、キーボードのマイクボタンで音声入力してください。");
+  if (!SpeechRecognition) {
+    enableFallback("このブラウザはページ内の音声認識に対応していません。入力欄をタップし、キーボードのマイクボタンを使ってください。");
     return;
   }
 
-  state.nativeDictation = false;
   transcriptionStatus.textContent = "待機中";
-  transcribeButton.innerHTML = '<span aria-hidden="true"></span> 文字起こし開始';
-  transcriptionHelp.textContent = "文字起こし開始を押し、マイクの使用を許可してください。";
-}
-
-function isAppleMobileBrowser() {
-  const ua = navigator.userAgent || "";
-  const appleTouchDevice =
-    /iPad|iPhone|iPod/.test(ua) ||
-    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1) ||
-    (/Apple/.test(navigator.vendor || "") && navigator.maxTouchPoints > 1);
-  const iOSBrowser = /CriOS|FxiOS|EdgiOS|Version\/.+Mobile\/.+Safari/.test(ua);
-  return appleTouchDevice || iOSBrowser;
-}
-
-function setNativeDictationMode(message) {
-  state.nativeDictation = true;
-  state.listening = false;
-  state.recognition = null;
-  transcriptionStatus.textContent = "端末入力";
-  transcribeButton.classList.remove("is-recording");
-  transcribeButton.innerHTML = '<span aria-hidden="true"></span> 入力欄を開く';
-  transcriptionHelp.textContent = `iPhoneではページ内の音声認識を開始できない場合があります。${message}`;
+  transcriptionHelp.textContent = "文字起こし開始を押して、マイクの使用を許可してください。";
 }
 
 function createRecognition() {
-  const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  const recognition = new Recognition();
-  recognition.continuous = true;
-  recognition.interimResults = true;
-  recognition.maxAlternatives = 1;
+  const recognition = new SpeechRecognition();
   recognition.lang = languageSelect.value;
-  return recognition;
-}
+  recognition.interimResults = true;
+  recognition.continuous = true;
+  recognition.maxAlternatives = 1;
 
-function attachRecognitionEvents(recognition) {
-  recognition.addEventListener("audiostart", () => {
-    transcriptionHelp.textContent = "マイク入力を確認しました。話した内容が下に表示されます。";
-  });
-
-  recognition.addEventListener("start", () => {
-    state.listening = true;
+  recognition.onstart = () => {
     transcriptionStatus.textContent = "聞き取り中";
-    transcribeButton.classList.add("is-recording");
-    transcribeButton.innerHTML = '<span aria-hidden="true"></span> 停止';
-  });
+    transcriptionHelp.textContent = "話した内容が下に表示されます。止めるときは停止を押してください。";
+    startButton.disabled = true;
+    stopButton.disabled = false;
+    startButton.classList.add("is-recording");
+  };
 
-  recognition.addEventListener("result", (event) => {
+  recognition.onresult = (event) => {
     let interim = "";
 
     for (let i = event.resultIndex; i < event.results.length; i += 1) {
-      const piece = event.results[i][0]?.transcript || "";
+      const text = event.results[i][0]?.transcript || "";
       if (event.results[i].isFinal) {
-        state.finalText += `${piece.trim()}\n`;
+        state.finalText += `${text.trim()}\n`;
       } else {
-        interim += piece;
+        interim += text;
       }
     }
 
     state.interimText = interim.trim();
     renderTranscript();
-  });
+  };
 
-  recognition.addEventListener("end", () => {
-    state.listening = false;
-    state.interimText = "";
-    transcriptionStatus.textContent = transcriptText.value.trim() ? "停止中" : "待機中";
-    transcribeButton.classList.remove("is-recording");
-    transcribeButton.innerHTML = '<span aria-hidden="true"></span> 文字起こし開始';
-    renderTranscript();
-  });
+  recognition.onerror = (event) => {
+    if (event.error === "aborted" && !state.shouldListen) return;
 
-  recognition.addEventListener("error", (event) => {
-    state.listening = false;
-    transcribeButton.classList.remove("is-recording");
-
-    if (isAppleMobileBrowser() || event.error === "service-not-allowed") {
-      setNativeDictationMode("入力欄をタップし、キーボードのマイクボタンを使ってください。");
-      focusManualDictation();
+    if (event.error === "service-not-allowed" || event.error === "not-allowed") {
+      enableFallback(getRecognitionErrorMessage(event.error));
+      focusManualInput();
       return;
     }
 
     transcriptionStatus.textContent = "エラー";
-    transcribeButton.innerHTML = '<span aria-hidden="true"></span> 文字起こし開始';
     transcriptionHelp.textContent = getRecognitionErrorMessage(event.error);
-  });
+  };
+
+  recognition.onend = () => {
+    if (state.shouldListen) {
+      window.setTimeout(() => {
+        try {
+          state.recognition?.start();
+        } catch (error) {
+          transcriptionStatus.textContent = "再開待ち";
+        }
+      }, 250);
+      return;
+    }
+
+    startButton.disabled = false;
+    stopButton.disabled = true;
+    startButton.classList.remove("is-recording");
+    transcriptionStatus.textContent = transcriptText.value.trim() ? "停止中" : "待機中";
+  };
+
+  return recognition;
 }
 
-async function toggleTranscription() {
-  if (state.nativeDictation) {
-    focusManualDictation();
+function startTranscription() {
+  if (state.fallbackMode) {
+    focusManualInput();
     return;
   }
 
-  if (state.listening) {
-    state.recognition?.stop();
-    return;
-  }
-
-  transcriptionStatus.textContent = "準備中";
-  transcriptionHelp.textContent = "マイクの使用許可を確認しています。";
+  unlockAudio();
+  state.shouldListen = true;
+  state.recognition = createRecognition();
 
   try {
-    await ensureMicrophonePermission();
-    state.recognition = createRecognition();
-    attachRecognitionEvents(state.recognition);
     state.recognition.start();
   } catch (error) {
-    if (isAppleMobileBrowser()) {
-      setNativeDictationMode("入力欄をタップし、キーボードのマイクボタンを使ってください。");
-      focusManualDictation();
-      return;
-    }
-
-    state.listening = false;
     transcriptionStatus.textContent = "エラー";
-    transcribeButton.classList.remove("is-recording");
-    transcribeButton.innerHTML = '<span aria-hidden="true"></span> 文字起こし開始';
     transcriptionHelp.textContent = getStartErrorMessage(error);
+    state.shouldListen = false;
+    startButton.disabled = false;
+    stopButton.disabled = true;
   }
 }
 
-function focusManualDictation() {
+function stopTranscription() {
+  state.shouldListen = false;
+  stopButton.disabled = true;
+
+  try {
+    state.recognition?.stop();
+  } catch (error) {
+    startButton.disabled = false;
+    startButton.classList.remove("is-recording");
+    transcriptionStatus.textContent = transcriptText.value.trim() ? "停止中" : "待機中";
+  }
+}
+
+function unlockAudio() {
+  const AudioContext = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContext) return;
+
+  try {
+    state.audioContext ||= new AudioContext();
+    if (state.audioContext.state === "suspended") {
+      state.audioContext.resume();
+    }
+
+    const source = state.audioContext.createBufferSource();
+    source.connect(state.audioContext.destination);
+    source.start(0);
+  } catch (error) {
+    // Audio unlock is best-effort; speech recognition can still continue.
+  }
+}
+
+function enableFallback(message) {
+  state.fallbackMode = true;
+  state.shouldListen = false;
+  startButton.disabled = false;
+  stopButton.disabled = true;
+  startButton.classList.remove("is-recording");
+  startButton.innerHTML = '<span aria-hidden="true"></span> 入力欄を開く';
+  transcriptionStatus.textContent = "端末入力";
+  transcriptionHelp.textContent = message;
+}
+
+function focusManualInput() {
   transcriptionStatus.textContent = "入力できます";
   transcriptionHelp.textContent = "キーボードが開いたら、マイクボタンを押して話してください。入力された文章はコピーや保存ができます。";
   transcriptText.focus();
   transcriptText.setSelectionRange(transcriptText.value.length, transcriptText.value.length);
-}
-
-async function ensureMicrophonePermission() {
-  if (!navigator.mediaDevices?.getUserMedia) return;
-
-  const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-  stream.getTracks().forEach((track) => track.stop());
 }
 
 function renderTranscript() {
@@ -218,15 +224,15 @@ function clearTranscript() {
   state.finalText = "";
   state.interimText = "";
   transcriptText.value = "";
-  transcriptionStatus.textContent = state.nativeDictation ? "端末入力" : state.listening ? "聞き取り中" : "待機中";
+  transcriptionStatus.textContent = state.fallbackMode ? "端末入力" : state.shouldListen ? "聞き取り中" : "待機中";
 }
 
 function getRecognitionErrorMessage(errorCode) {
   const messages = {
     "audio-capture": "マイクが見つかりません。端末のマイク設定を確認してください。",
-    "not-allowed": "マイクの使用が許可されていません。ブラウザの権限設定を確認してください。",
-    aborted: "音声認識が中断されました。もう一度「文字起こし開始」を押してください。",
-    "language-not-supported": "選択した言語はこのブラウザで使えません。日本語またはEnglishを切り替えて試してください。",
+    "not-allowed": "マイクの使用が許可されていません。入力欄を開いて、キーボードのマイクボタンを使ってください。",
+    aborted: "音声認識が中断されました。もう一度開始してください。",
+    "language-not-supported": "選択した言語はこのブラウザで使えません。言語を切り替えて試してください。",
     network: "音声認識サービスに接続できません。通信状態を確認してください。",
     "no-speech": "音声を検出できませんでした。もう一度話してください。",
     "service-not-allowed": "このブラウザではページ内の音声認識を利用できません。入力欄を開いて端末の音声入力を使ってください。",
@@ -236,14 +242,6 @@ function getRecognitionErrorMessage(errorCode) {
 }
 
 function getStartErrorMessage(error) {
-  if (error?.name === "NotAllowedError" || error?.name === "PermissionDeniedError") {
-    return "マイクの使用が許可されていません。ブラウザの権限設定でマイクを許可してください。";
-  }
-
-  if (error?.name === "NotFoundError" || error?.name === "DevicesNotFoundError") {
-    return "マイクが見つかりません。端末のマイク設定を確認してください。";
-  }
-
   if (error?.name === "InvalidStateError") {
     return "音声認識がまだ停止処理中です。少し待ってからもう一度押してください。";
   }

@@ -25,10 +25,13 @@
           </select>
         </div>
 
-        <button id="transcribeButton" class="record-button" type="button">
-          <span aria-hidden="true"></span>
-          入力欄を開く
-        </button>
+        <div class="record-grid">
+          <button id="transcribeButton" class="record-button" type="button">
+            <span aria-hidden="true"></span>
+            文字起こし開始
+          </button>
+          <button id="stopButton" class="stop-button" type="button" disabled>停止</button>
+        </div>
 
         <textarea
           id="transcriptText"
@@ -44,11 +47,11 @@
         </div>
 
         <p id="transcriptionHelp" class="help-text">
-          iPhoneでは「入力欄を開く」を押し、キーボードのマイクボタンで音声入力してください。AndroidのChromeではページ内の文字起こし開始も使えます。
+          文字起こし開始を押して、マイクの使用を許可してください。iPhoneで開始できない場合は入力欄をタップし、キーボードのマイクボタンを使ってください。
         </p>
       </section>
     </main>
 
-    <script src="./app.js?v=iphone-dictation-2" type="module"></script>
+    <script src="./app.js?v=recognition-loop-1" type="module"></script>
   </body>
 </html>

@@ -107,7 +107,15 @@ select {
   color-scheme: dark;
 }
 
+.record-grid {
+  display: grid;
+  grid-template-columns: 1fr 0.48fr;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
 .record-button,
+.stop-button,
 .secondary-button {
   min-height: 52px;
   border: 1px solid var(--line);
@@ -122,10 +130,14 @@ select {
   justify-content: center;
   gap: 10px;
   width: 100%;
-  margin-bottom: 12px;
   background: linear-gradient(135deg, #0f766e, #0369a1);
   font-weight: 900;
   box-shadow: 0 14px 34px rgba(20, 184, 166, 0.2);
+}
+
+.stop-button {
+  background: linear-gradient(135deg, #be123c, #9f1239);
+  font-weight: 900;
 }
 
 .record-button span {
@@ -191,6 +203,7 @@ button:disabled {
 
 @media (max-width: 540px) {
   .status-row,
+  .record-grid,
   .action-grid {
     grid-template-columns: 1fr;
   }
