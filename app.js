@@ -2,6 +2,7 @@ const startButton = document.querySelector("#startButton");
 const mirrorToggle = document.querySelector("#mirrorToggle");
 const video = document.querySelector("#video");
 const overlay = document.querySelector("#overlay");
+const dogEyes = document.querySelector("#dogEyes");
 const loadingState = document.querySelector("#loadingState");
 const offsetText = document.querySelector("#offsetText");
 const directionText = document.querySelector("#directionText");
@@ -19,9 +20,13 @@ const state = {
   running: false,
   rafId: null,
   detecting: false,
+  eyeX: 0,
+  eyeY: 0,
 };
 
 const PERSON_SCORE_MIN = 0.45;
+const EYE_RANGE_X = 18;
+const EYE_RANGE_Y = 13;
 
 startButton.addEventListener("click", start);
 mirrorToggle.addEventListener("change", updateMirrorMode);
@@ -124,6 +129,7 @@ function renderDetections(predictions) {
   personCountText.textContent = String(people.length);
 
   if (people.length === 0) {
+    updateEyeTracking(0, 0);
     loadingState.textContent = "人物を探しています";
     offsetText.textContent = "--%";
     xOffsetText.textContent = "--%";
@@ -139,6 +145,7 @@ function renderDetections(predictions) {
   const mainPerson = people[0];
   const metrics = getOffsetMetrics(mainPerson.bbox, video.videoWidth, video.videoHeight);
   const displayBox = toDisplayBox(mainPerson.bbox, rect.width, rect.height);
+  updateEyeTracking(metrics.x, metrics.y);
 
   drawCenter(rect.width, rect.height);
   people.slice(0, 5).forEach((person, index) => {
@@ -177,6 +184,16 @@ function getDirectionLabel(metrics) {
   const horizontal = Math.abs(metrics.x) <= 5 ? "" : metrics.x > 0 ? "右" : "左";
   const vertical = Math.abs(metrics.y) <= 5 ? "" : metrics.y > 0 ? "下" : "上";
   return `${vertical}${horizontal}へ${metrics.total}%ズレています`;
+}
+
+function updateEyeTracking(xPercent, yPercent) {
+  const targetX = clamp(xPercent / 100, -1, 1) * EYE_RANGE_X;
+  const targetY = clamp(yPercent / 100, -1, 1) * EYE_RANGE_Y;
+  state.eyeX = state.eyeX * 0.72 + targetX * 0.28;
+  state.eyeY = state.eyeY * 0.72 + targetY * 0.28;
+
+  dogEyes.style.setProperty("--look-x", `${state.eyeX.toFixed(1)}px`);
+  dogEyes.style.setProperty("--look-y", `${state.eyeY.toFixed(1)}px`);
 }
 
 function toDisplayBox([x, y, width, height], displayWidth, displayHeight) {
