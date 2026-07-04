@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#0f172a" />
+    <title>人物中心ズレ検知</title>
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="eye-stage" aria-label="追従する目">
+        <svg
+          id="dogEyes"
+          class="dog-eyes"
+          viewBox="0 0 320 170"
+          role="img"
+          aria-label="人を追いかけるロボットの目"
+        >
+          <path d="M56 54 Q100 26 144 54" fill="none" stroke="#89d8ff" stroke-width="8" stroke-linecap="round" />
+          <path d="M176 54 Q220 26 264 54" fill="none" stroke="#89d8ff" stroke-width="8" stroke-linecap="round" />
+          <ellipse cx="100" cy="88" rx="48" ry="39" fill="#eafcff" stroke="#0b2530" stroke-width="6" />
+          <ellipse cx="220" cy="88" rx="48" ry="39" fill="#eafcff" stroke="#0b2530" stroke-width="6" />
+          <g id="pupilGroup">
+            <circle cx="100" cy="91" r="18" fill="#071319" />
+            <circle cx="220" cy="91" r="18" fill="#071319" />
+            <circle cx="93" cy="82" r="5" fill="#ffffff" />
+            <circle cx="213" cy="82" r="5" fill="#ffffff" />
+          </g>
+          <g class="blink-lids">
+            <rect class="lid top-lid left-lid" x="52" y="58" width="96" height="23" rx="12" fill="#182536" />
+            <rect class="lid top-lid right-lid" x="172" y="58" width="96" height="23" rx="12" fill="#182536" />
+            <rect class="lid bottom-lid left-lid" x="52" y="99" width="96" height="23" rx="12" fill="#182536" />
+            <rect class="lid bottom-lid right-lid" x="172" y="99" width="96" height="23" rx="12" fill="#182536" />
+          </g>
+        </svg>
+      </section>
+
+      <button id="startButton" class="camera-start" type="button" aria-label="カメラ開始"></button>
+      <video id="video" class="hidden-camera" playsinline muted autoplay></video>
+      <canvas id="overlay" class="hidden-camera"></canvas>
+      <div id="loadingState" class="visually-hidden">カメラ待機中</div>
+      <div id="offsetText" class="visually-hidden">--%</div>
+      <div id="directionText" class="visually-hidden">人物を検知すると表示します</div>
+      <div id="xOffsetText" class="visually-hidden">--%</div>
+      <div id="yOffsetText" class="visually-hidden">--%</div>
+      <div id="xDirectionText" class="visually-hidden">--</div>
+      <div id="yDirectionText" class="visually-hidden">--</div>
+      <div id="personCountText" class="visually-hidden">0</div>
+      <div id="confidenceText" class="visually-hidden">信頼度 --</div>
+      <input id="mirrorToggle" type="checkbox" checked hidden />
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js"></script>
+    <script src="./app.js" type="module"></script>
+  </body>
+</html>

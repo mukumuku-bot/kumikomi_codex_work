@@ -1,4 +1,5 @@
-const CACHE_NAME = "sound-bearing-transcription-v2";
+const CACHE_PREFIX = "sound-bearing-transcription-";
+const CACHE_NAME = `${CACHE_PREFIX}v3`;
 const FILES = [
   "./index.html",
   "./styles.css",
@@ -15,7 +16,13 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches
       .keys()
-      .then((names) => Promise.all(names.map((name) => (name === CACHE_NAME ? null : caches.delete(name)))))
+      .then((names) =>
+        Promise.all(
+          names
+            .filter((name) => name.startsWith(CACHE_PREFIX) && name !== CACHE_NAME)
+            .map((name) => caches.delete(name)),
+        ),
+      )
       .then(() => self.clients.claim()),
   );
 });
