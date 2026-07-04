@@ -9,6 +9,14 @@ const balanceText = document.querySelector("#balanceText");
 const inputState = document.querySelector("#inputState");
 const needle = document.querySelector("#needle");
 const sweep = document.querySelector("#sweep");
+const transcribeButton = document.querySelector("#transcribeButton");
+const languageSelect = document.querySelector("#languageSelect");
+const copyTranscriptButton = document.querySelector("#copyTranscriptButton");
+const downloadTranscriptButton = document.querySelector("#downloadTranscriptButton");
+const clearTranscriptButton = document.querySelector("#clearTranscriptButton");
+const transcriptText = document.querySelector("#transcriptText");
+const transcriptionStatus = document.querySelector("#transcriptionStatus");
+const transcriptionHelp = document.querySelector("#transcriptionHelp");
 
 const state = {
   audioContext: null,
@@ -27,6 +35,14 @@ const state = {
   pendingSince: 0,
 };
 
+const transcriptionState = {
+  recognition: null,
+  supported: Boolean(window.SpeechRecognition || window.webkitSpeechRecognition),
+  listening: false,
+  finalText: "",
+  interimText: "",
+};
+
 const MIN_ACTIVE_DB = -58;
 const CENTER_THRESHOLD = 0.08;
 const DIRECTION_THRESHOLD = 0.22;
@@ -37,6 +53,17 @@ const SWITCH_HOLD_MS = 650;
 
 startButton.addEventListener("click", start);
 resetButton.addEventListener("click", resetMeasurements);
+transcribeButton.addEventListener("click", toggleTranscription);
+copyTranscriptButton.addEventListener("click", copyTranscript);
+downloadTranscriptButton.addEventListener("click", downloadTranscript);
+clearTranscriptButton.addEventListener("click", clearTranscript);
+languageSelect.addEventListener("change", () => {
+  if (transcriptionState.recognition) {
+    transcriptionState.recognition.lang = languageSelect.value;
+  }
+});
+
+setupTranscription();
 
 async function start() {
   startButton.disabled = true;
@@ -121,8 +148,7 @@ function estimateDirection(leftRms, rightRms, db, now) {
   const quiet = Math.min(leftRms, rightRms);
   const channelRatio = quiet / Math.max(loud, 0.000001);
 
-  // Mono microphones often appear as left = signal, right = silence after splitting.
-  // Treat that as unsupported instead of falsely saying "left".
+  // Mono microphones can appear as left = signal, right = silence after splitting.
   if (channelRatio < MIN_CHANNEL_RATIO) {
     balanceText.textContent = "単一";
     inputState.textContent = "単一入力のため左右判定不可";
@@ -242,6 +268,132 @@ function resetMeasurements() {
   balanceText.textContent = "--";
   inputState.textContent = "マイク待機中";
   renderEstimate(null);
+}
+
+function setupTranscription() {
+  if (!transcriptionState.supported) {
+    transcribeButton.disabled = true;
+    transcriptionStatus.textContent = "非対応";
+    transcriptionHelp.textContent = "このブラウザは音声認識に対応していません。AndroidのChromeなどで開いてください。";
+    return;
+  }
+
+  const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const recognition = new Recognition();
+  recognition.continuous = true;
+  recognition.interimResults = true;
+  recognition.lang = languageSelect.value;
+
+  recognition.addEventListener("start", () => {
+    transcriptionState.listening = true;
+    transcriptionStatus.textContent = "聞き取り中";
+    transcribeButton.innerHTML = '<span aria-hidden="true">&#9632;</span> 停止';
+  });
+
+  recognition.addEventListener("result", (event) => {
+    let interim = "";
+
+    for (let i = event.resultIndex; i < event.results.length; i += 1) {
+      const piece = event.results[i][0]?.transcript || "";
+      if (event.results[i].isFinal) {
+        transcriptionState.finalText += `${piece.trim()}\n`;
+      } else {
+        interim += piece;
+      }
+    }
+
+    transcriptionState.interimText = interim.trim();
+    renderTranscript();
+  });
+
+  recognition.addEventListener("end", () => {
+    transcriptionState.listening = false;
+    transcriptionState.interimText = "";
+    transcriptionStatus.textContent = transcriptText.value.trim() ? "停止中" : "待機中";
+    transcribeButton.innerHTML = '<span aria-hidden="true">&#9679;</span> 文字起こし開始';
+    renderTranscript();
+  });
+
+  recognition.addEventListener("error", (event) => {
+    transcriptionState.listening = false;
+    transcriptionStatus.textContent = "エラー";
+    transcriptionHelp.textContent = getRecognitionErrorMessage(event.error);
+  });
+
+  transcriptionState.recognition = recognition;
+}
+
+function toggleTranscription() {
+  if (!transcriptionState.recognition) return;
+
+  if (transcriptionState.listening) {
+    transcriptionState.recognition.stop();
+    return;
+  }
+
+  transcriptionHelp.textContent = "話した内容が下に表示されます。必要に応じてコピーまたは保存できます。";
+  transcriptionState.recognition.lang = languageSelect.value;
+
+  try {
+    transcriptionState.recognition.start();
+  } catch (error) {
+    transcriptionStatus.textContent = "起動待ち";
+  }
+}
+
+function renderTranscript() {
+  const divider = transcriptionState.finalText && transcriptionState.interimText ? "\n" : "";
+  transcriptText.value = `${transcriptionState.finalText}${divider}${transcriptionState.interimText}`.trimStart();
+  transcriptText.scrollTop = transcriptText.scrollHeight;
+}
+
+async function copyTranscript() {
+  const text = transcriptText.value.trim();
+  if (!text) return;
+
+  try {
+    await navigator.clipboard.writeText(text);
+    transcriptionStatus.textContent = "コピー済み";
+  } catch (error) {
+    transcriptText.select();
+    document.execCommand("copy");
+    transcriptionStatus.textContent = "コピー済み";
+  }
+}
+
+function downloadTranscript() {
+  const text = transcriptText.value.trim();
+  if (!text) return;
+
+  const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+  const blob = new Blob([`${text}\n`], { type: "text/plain;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `transcript-${timestamp}.txt`;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+  transcriptionStatus.textContent = "保存しました";
+}
+
+function clearTranscript() {
+  transcriptionState.finalText = "";
+  transcriptionState.interimText = "";
+  transcriptText.value = "";
+  transcriptionStatus.textContent = transcriptionState.listening ? "聞き取り中" : "待機中";
+}
+
+function getRecognitionErrorMessage(errorCode) {
+  const messages = {
+    "audio-capture": "マイクが見つかりません。端末のマイク設定を確認してください。",
+    "not-allowed": "マイクの使用が許可されていません。ブラウザの権限設定を確認してください。",
+    network: "音声認識サービスに接続できません。通信状態を確認してください。",
+    "no-speech": "音声を検出できませんでした。もう一度話してください。",
+  };
+
+  return messages[errorCode] || "文字起こしを開始できませんでした。ブラウザや権限設定を確認してください。";
 }
 
 function getRms(buffer) {

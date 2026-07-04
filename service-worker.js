@@ -1,4 +1,4 @@
-const CACHE_NAME = "sound-bearing-v4";
+const CACHE_NAME = "sound-bearing-transcription-v1";
 const FILES = [
   "./",
   "./index.html",
