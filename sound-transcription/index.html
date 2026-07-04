@@ -48,6 +48,46 @@
       cursor: not-allowed;
     }
 
+    #transcript {
+      width: 100%;
+      min-height: 170px;
+      margin-top: 20px;
+      padding: 12px;
+      border: 1px solid #d5dce3;
+      border-radius: 8px;
+      box-sizing: border-box;
+      font: inherit;
+      line-height: 1.6;
+      resize: vertical;
+      text-align: left;
+      color: #333;
+      background: #fbfcfd;
+    }
+
+    .utility-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .utility-row button {
+      margin: 0;
+      padding: 12px 8px;
+      font-size: 15px;
+    }
+
+    #copy-btn,
+    #save-btn {
+      background-color: #34495e;
+      color: white;
+    }
+
+    #clear-btn {
+      background-color: #95a5a6;
+      color: white;
+    }
+
     #status {
       font-size: 16px;
       margin-top: 25px;
@@ -63,17 +103,28 @@
     <h1>ver07-01-06</h1>
     <button id="start-btn">録音開始</button>
     <button id="stop-btn" disabled>停止</button>
+    <textarea id="transcript" placeholder="ここに文字起こし結果が表示されます"></textarea>
+    <div class="utility-row">
+      <button id="copy-btn" type="button">コピー</button>
+      <button id="save-btn" type="button">保存</button>
+      <button id="clear-btn" type="button">消去</button>
+    </div>
     <div id="status">「録音開始」を押してください</div>
   </div>
 
   <script>
     const startBtn = document.getElementById("start-btn");
     const stopBtn = document.getElementById("stop-btn");
+    const copyBtn = document.getElementById("copy-btn");
+    const saveBtn = document.getElementById("save-btn");
+    const clearBtn = document.getElementById("clear-btn");
+    const transcript = document.getElementById("transcript");
     const statusText = document.getElementById("status");
 
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     let recognition = null;
     let audioCtx = null;
+    let finalTranscript = "";
 
     function cleanupOldServiceWorker() {
       if ("serviceWorker" in navigator) {
@@ -156,27 +207,36 @@
       nextRecognition.continuous = true;
 
       nextRecognition.onstart = () => {
-        statusText.textContent = "認識中... 触らずに「テスト」や「ワン」と言ってね";
+        statusText.textContent = "認識中... 「テスト」や「ワン」と言うと音が鳴ります";
         statusText.style.color = "#2ecc71";
       };
 
       nextRecognition.onresult = (event) => {
         let trigger = false;
-        let latestText = "";
+        let interimTranscript = "";
 
         for (let i = event.resultIndex; i < event.results.length; i += 1) {
           const text = event.results[i][0].transcript;
-          latestText += text;
 
           if (event.results[i].isFinal) {
+            const cleanText = text.trim();
+            if (cleanText) {
+              finalTranscript += cleanText + "\n";
+            }
+
             if (text.includes("テスト") || text.includes("ワン") || text.includes("犬")) {
               trigger = true;
             }
+          } else {
+            interimTranscript += text;
           }
         }
 
-        if (latestText.trim()) {
-          statusText.textContent = `認識中...\n${latestText.trim()}`;
+        transcript.value = (finalTranscript + interimTranscript).trimStart();
+        transcript.scrollTop = transcript.scrollHeight;
+
+        if (interimTranscript.trim()) {
+          statusText.textContent = `認識中...\n${interimTranscript.trim()}`;
           statusText.style.color = "#2ecc71";
         }
 
@@ -241,6 +301,47 @@
         recognition.stop();
       });
     }
+
+    copyBtn.addEventListener("click", async () => {
+      const text = transcript.value.trim();
+      if (!text) return;
+
+      try {
+        await navigator.clipboard.writeText(text);
+      } catch (error) {
+        transcript.select();
+        document.execCommand("copy");
+      }
+
+      statusText.textContent = "コピーしました。";
+      statusText.style.color = "#7f8c8d";
+    });
+
+    saveBtn.addEventListener("click", () => {
+      const text = transcript.value.trim();
+      if (!text) return;
+
+      const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+      const blob = new Blob([text + "\n"], { type: "text/plain;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `transcript-${timestamp}.txt`;
+      document.body.append(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+
+      statusText.textContent = "保存しました。";
+      statusText.style.color = "#7f8c8d";
+    });
+
+    clearBtn.addEventListener("click", () => {
+      finalTranscript = "";
+      transcript.value = "";
+      statusText.textContent = "消去しました。";
+      statusText.style.color = "#7f8c8d";
+    });
   </script>
 </body>
 </html>
