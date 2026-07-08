@@ -1,0 +1,9 @@
+{
+  "name": "組み込みデモ一覧",
+  "short_name": "組み込みデモ",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#101828",
+  "theme_color": "#101828",
+  "icons": []
+}
