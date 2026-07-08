@@ -92,6 +92,7 @@ const speechState = {
   volumeAnalyser: null,
   volumeData: null,
   volumeRafId: null,
+  volumeOwnsStream: false,
   barkNoiseBuffer: null,
 };
 
@@ -524,7 +525,7 @@ async function startRun() {
     await new Promise((resolve) => requestAnimationFrame(resolve));
 
     const stream = await navigator.mediaDevices.getUserMedia({
-      audio: false,
+      audio: true,
       video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } },
     });
 
@@ -535,6 +536,7 @@ async function startRun() {
     const detectionReady = await prepareDetection();
     updateRunningViewMode();
     elements.stopRunButton.disabled = false;
+    startVolumeMeter(runState.stream);
     elements.runStatusText.textContent = detectionReady ? "人物を探しています" : "目だけを表示しています";
     startHiddenTranscription();
     if (detectionReady) {
@@ -557,6 +559,7 @@ function stopRun() {
   runState.running = false;
   runState.detecting = false;
   stopHiddenTranscription();
+  stopVolumeMeter();
   if (runState.rafId) cancelAnimationFrame(runState.rafId);
   stopStream(runState.stream);
   runState.stream = null;
@@ -921,11 +924,15 @@ function stopHiddenTranscription() {
   }
 }
 
-async function startVolumeMeter() {
+async function startVolumeMeter(sourceStream = null) {
   if (speechState.volumeAnalyser) return;
 
   try {
-    speechState.volumeStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+    const canUseSourceStream = sourceStream?.getAudioTracks?.().some((track) => track.readyState === "live");
+    speechState.volumeOwnsStream = !canUseSourceStream;
+    speechState.volumeStream = canUseSourceStream
+      ? sourceStream
+      : await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
     const AudioContext = window.AudioContext || window.webkitAudioContext;
     speechState.volumeAudioContext = new AudioContext();
     const source = speechState.volumeAudioContext.createMediaStreamSource(speechState.volumeStream);
@@ -944,7 +951,10 @@ async function startVolumeMeter() {
 function stopVolumeMeter() {
   if (speechState.volumeRafId) cancelAnimationFrame(speechState.volumeRafId);
   speechState.volumeRafId = null;
-  speechState.volumeStream?.getTracks().forEach((track) => track.stop());
+  if (speechState.volumeOwnsStream) {
+    speechState.volumeStream?.getTracks().forEach((track) => track.stop());
+  }
+  speechState.volumeOwnsStream = false;
   speechState.volumeStream = null;
   speechState.volumeAudioContext?.close?.().catch(() => {});
   speechState.volumeAudioContext = null;
