@@ -580,6 +580,7 @@ async function startRun() {
   elements.runStatusText.textContent = "カメラを起動しています";
   ensureBarkAudio();
   preloadBarkSample();
+  primeKyokoVoice();
 
   try {
     if (runState.running) stopRun();
@@ -1288,7 +1289,8 @@ function handleVoiceCommand(text) {
   const heard = normalizeSpeech(text);
   if (!dogName || !heard.includes(dogName)) return;
 
-  const barkCount = heard.includes("おいで") ? 2 : 1;
+  const isComeCommand = heard.includes("おいで");
+  const barkCount = isComeCommand ? 2 : 1;
   const commandKey = `${barkCount}:${heard}`;
   const now = Date.now();
   if (speechState.lastCommandKey === commandKey && now - speechState.lastCommandAt < 1800) return;
@@ -1296,6 +1298,45 @@ function handleVoiceCommand(text) {
   speechState.lastCommandKey = commandKey;
   speechState.lastCommandAt = now;
   bark(barkCount);
+  window.setTimeout(() => {
+    speakKyokoReply(isComeCommand ? "いま行きます。" : "どうしましたか。");
+  }, barkCount * 360 + 100);
+}
+
+function primeKyokoVoice() {
+  if (!window.speechSynthesis || !window.SpeechSynthesisUtterance) return;
+  window.speechSynthesis.getVoices();
+}
+
+function getKyokoVoice() {
+  if (!window.speechSynthesis) return null;
+  const voices = window.speechSynthesis.getVoices();
+  return voices.find((voice) => voice.name.toLowerCase().includes("kyoko"))
+    || voices.find((voice) => voice.lang.toLowerCase().startsWith("ja"))
+    || null;
+}
+
+function speakKyokoReply(reply) {
+  if (!window.speechSynthesis || !window.SpeechSynthesisUtterance) return;
+
+  const voice = getKyokoVoice();
+  const greeting = new SpeechSynthesisUtterance("はい。");
+  const response = new SpeechSynthesisUtterance(reply);
+
+  [greeting, response].forEach((utterance) => {
+    utterance.lang = "ja-JP";
+    utterance.rate = 1.04;
+    utterance.pitch = 0.82;
+    utterance.volume = 1;
+    if (voice) utterance.voice = voice;
+  });
+
+  greeting.addEventListener("end", () => {
+    window.setTimeout(() => window.speechSynthesis.speak(response), 320);
+  });
+
+  window.speechSynthesis.cancel();
+  window.speechSynthesis.speak(greeting);
 }
 
 function normalizeSpeech(text) {
