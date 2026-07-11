@@ -77,6 +77,7 @@ const runState = {
   eyeY: 0,
   sleeping: false,
   voiceEmotionTimer: null,
+  idleSadnessTimer: null,
   trackedCenter: null,
   coveredFrames: 0,
 };
@@ -127,6 +128,7 @@ const EYE_RANGE_X = 20;
 const EYE_RANGE_Y = 12;
 const EYE_TRACKING_RESPONSE = 0.34;
 const FACE_COVER_SWITCH_FRAMES = 8;
+const IDLE_SADNESS_DELAY_MS = 180000;
 
 window.addEventListener("hashchange", showRouteFromHash);
 window.addEventListener("resize", resizeOverlay);
@@ -605,6 +607,7 @@ async function startRun() {
     elements.stopRunButton.disabled = false;
     elements.runStatusText.textContent = detectionReady ? "人物を探しています" : "目だけを表示しています";
     startHiddenTranscription();
+    startIdleSadnessCountdown();
     if (detectionReady) {
       detectLoop();
     } else {
@@ -625,6 +628,7 @@ function stopRun() {
   runState.running = false;
   runState.detecting = false;
   clearVoiceEmotion();
+  clearIdleSadness();
   stopHiddenTranscription();
   stopVolumeMeter();
   if (runState.rafId) cancelAnimationFrame(runState.rafId);
@@ -724,6 +728,7 @@ function renderDetections(predictions, faces = []) {
 
   if (!people.length) {
     if (faces.length) {
+      clearIdleSadness();
       wakeEyes();
       const mainFace = chooseTrackedFace(faces, frameWidth, frameHeight);
       if (!mainFace) {
@@ -741,6 +746,7 @@ function renderDetections(predictions, faces = []) {
 
     runState.trackedCenter = null;
     runState.coveredFrames = 0;
+    startIdleSadnessCountdown();
     sleepEyes();
     updateEyeTracking(0, 0);
     elements.runStatusText.textContent = "人物を探しています";
@@ -750,6 +756,7 @@ function renderDetections(predictions, faces = []) {
   }
 
   wakeEyes();
+  clearIdleSadness();
   const mainPerson = chooseTrackedPerson(people, faces, frameWidth, frameHeight);
   const metrics = getOffsetMetrics(mainPerson.bbox, frameWidth, frameHeight);
   updateEyeTracking(metrics.x, metrics.y);
@@ -1311,15 +1318,15 @@ function getVoiceCommand(heard) {
   }
 
   if (includesCommandWord(heard, ["おて", "お手"])) {
-    return { id: "paw", barkCount: 1, reply: "おて。どうぞ。", emotion: "proud", duration: 2100 };
+    return { id: "paw", barkCount: 1, reply: "おて。どうぞ。", emotion: "happy", duration: 2100 };
   }
 
   if (includesCommandWord(heard, ["おすわり", "お座り"])) {
-    return { id: "sit", barkCount: 1, reply: "おすわり。おりこうだワン。", emotion: "calm", duration: 2200 };
+    return { id: "sit", barkCount: 1, reply: "おすわり。おりこうだワン。", emotion: "happy", duration: 2200 };
   }
 
   if (includesCommandWord(heard, ["まて", "待て"])) {
-    return { id: "wait", barkCount: 1, reply: "まってるワン。", emotion: "patient", duration: 2200 };
+    return { id: "wait", barkCount: 1, reply: "まってるワン。", emotion: "happy", duration: 2200 };
   }
 
   return { id: "name", barkCount: 1, reply: "どうしましたか。", emotion: "happy", duration: 1800 };
@@ -1330,8 +1337,9 @@ function includesCommandWord(heard, words) {
 }
 
 function triggerVoiceEmotion(emotion, duration) {
-  const classes = ["is-emotion-happy", "is-emotion-excited", "is-emotion-proud", "is-emotion-calm", "is-emotion-patient"];
+  const classes = ["is-emotion-happy", "is-emotion-excited", "is-emotion-proud", "is-emotion-calm", "is-emotion-patient", "is-emotion-sad"];
   const emotionClass = `is-emotion-${emotion}`;
+  clearIdleSadness();
   elements.dogEyes.classList.remove(...classes);
   elements.dogEyes.classList.add(emotionClass);
   blinkEyes();
@@ -1340,6 +1348,7 @@ function triggerVoiceEmotion(emotion, duration) {
   runState.voiceEmotionTimer = window.setTimeout(() => {
     elements.dogEyes.classList.remove(emotionClass);
     runState.voiceEmotionTimer = null;
+    startIdleSadnessCountdown();
   }, duration);
 }
 
@@ -1352,7 +1361,24 @@ function clearVoiceEmotion() {
     "is-emotion-proud",
     "is-emotion-calm",
     "is-emotion-patient",
+    "is-emotion-sad",
   );
+}
+
+function startIdleSadnessCountdown() {
+  if (!runState.running || runState.idleSadnessTimer || elements.dogEyes.classList.contains("is-emotion-sad")) return;
+
+  runState.idleSadnessTimer = window.setTimeout(() => {
+    runState.idleSadnessTimer = null;
+    if (!runState.running) return;
+    elements.dogEyes.classList.add("is-emotion-sad");
+  }, IDLE_SADNESS_DELAY_MS);
+}
+
+function clearIdleSadness() {
+  if (runState.idleSadnessTimer) window.clearTimeout(runState.idleSadnessTimer);
+  runState.idleSadnessTimer = null;
+  elements.dogEyes.classList.remove("is-emotion-sad");
 }
 
 function primeKyokoVoice() {
