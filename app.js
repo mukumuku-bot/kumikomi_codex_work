@@ -156,7 +156,7 @@ function showRouteFromHash() {
   let currentRoute = routes.includes(route) ? route : "product";
   const loggedIn = Boolean(authState.user);
 
-  if (authState.initialized && protectedRoutes.includes(currentRoute) && !loggedIn) {
+  if (authState.initialized && protectedRoutes.includes(currentRoute) && !loggedIn && !runState.running) {
     setAccountMode("signin");
     currentRoute = "account";
     if (window.location.hash !== "#account") window.location.hash = "#account";
@@ -641,7 +641,6 @@ async function prepareDetection() {
   } catch (error) {
     console.warn(error);
     runState.model = null;
-    return false;
   }
 
   try {
@@ -651,7 +650,7 @@ async function prepareDetection() {
     runState.faceDetector = null;
   }
 
-  return true;
+  return Boolean(runState.model || runState.faceDetector);
 }
 
 async function loadFaceDetector() {
@@ -680,7 +679,7 @@ async function detectLoop() {
 
   try {
     resizeOverlay();
-    const predictions = await runState.model.detect(elements.video);
+    const predictions = runState.model ? await runState.model.detect(elements.video) : [];
     const faces = runState.faceDetector
       ? await runState.faceDetector.estimateFaces(elements.video, { flipHorizontal: false })
       : [];
@@ -704,6 +703,22 @@ function renderDetections(predictions, faces = []) {
   elements.personCountText.textContent = String(people.length);
 
   if (!people.length) {
+    if (faces.length) {
+      wakeEyes();
+      const mainFace = chooseTrackedFace(faces, frameWidth, frameHeight);
+      if (!mainFace) {
+        updateEyeTracking(0, 0);
+        return;
+      }
+      const metrics = getOffsetMetrics(mainFace.bbox, frameWidth, frameHeight);
+      updateEyeTracking(metrics.x, metrics.y);
+      elements.personCountText.textContent = String(faces.length);
+      elements.runStatusText.textContent = "顔を追従中";
+      elements.directionText.textContent = getDirectionLabel(metrics);
+      elements.confidenceText.textContent = "--";
+      return;
+    }
+
     runState.trackedCenter = null;
     runState.coveredFrames = 0;
     sleepEyes();
@@ -721,6 +736,58 @@ function renderDetections(predictions, faces = []) {
   elements.runStatusText.textContent = "検出中";
   elements.directionText.textContent = getDirectionLabel(metrics);
   elements.confidenceText.textContent = `${Math.round(mainPerson.score * 100)}%`;
+}
+
+function chooseTrackedFace(faces, frameWidth, frameHeight) {
+  const candidates = faces
+    .map((face) => {
+      const bbox = getFaceBbox(face);
+      return {
+        bbox,
+        center: getBoxCenter(bbox),
+      };
+    })
+    .filter((item) => item.bbox[2] > 0 && item.bbox[3] > 0);
+
+  if (!candidates.length) return null;
+
+  const current = findCurrentTrackedFace(candidates);
+  const next = current || chooseBestFaceCandidate(candidates, frameWidth, frameHeight);
+  runState.trackedCenter = next.center;
+  runState.coveredFrames = 0;
+  return next;
+}
+
+function findCurrentTrackedFace(candidates) {
+  if (!runState.trackedCenter || !candidates.length) return null;
+
+  return candidates
+    .map((item) => ({
+      ...item,
+      distance: Math.hypot(item.center.x - runState.trackedCenter.x, item.center.y - runState.trackedCenter.y),
+    }))
+    .sort((a, b) => a.distance - b.distance)[0] || null;
+}
+
+function chooseBestFaceCandidate(candidates, frameWidth, frameHeight) {
+  const frameCenter = { x: frameWidth / 2, y: frameHeight / 2 };
+  return candidates
+    .map((item) => {
+      const centerDistance = Math.hypot(item.center.x - frameCenter.x, item.center.y - frameCenter.y);
+      const normalizedDistance = centerDistance / Math.hypot(frameCenter.x, frameCenter.y);
+      const area = item.bbox[2] * item.bbox[3];
+      return { ...item, score: area - normalizedDistance * area * 0.18 };
+    })
+    .sort((a, b) => b.score - a.score)[0];
+}
+
+function getFaceBbox(face) {
+  const box = face.box || {};
+  const x = box.xMin ?? box.x ?? 0;
+  const y = box.yMin ?? box.y ?? 0;
+  const width = box.width ?? Math.max(0, (box.xMax ?? 0) - x);
+  const height = box.height ?? Math.max(0, (box.yMax ?? 0) - y);
+  return [x, y, width, height];
 }
 
 function chooseTrackedPerson(people, faces, frameWidth, frameHeight) {
