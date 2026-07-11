@@ -880,6 +880,66 @@ button:disabled {
   line-height: 1.55;
 }
 
+.integrated-diagnostics {
+  display: grid;
+  gap: 22px;
+  margin-top: 28px;
+}
+
+.integrated-diagnostics .section-title > p:last-child {
+  max-width: 720px;
+  margin-top: 10px;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.integrated-test-card {
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  box-shadow: var(--shadow);
+}
+
+.integrated-test-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--line);
+}
+
+.integrated-test-heading > span {
+  display: grid;
+  flex: 0 0 42px;
+  min-height: 38px;
+  place-items: center;
+  background: var(--accent);
+  color: var(--on-accent, #ffffff);
+  font-weight: 900;
+}
+
+.integrated-test-heading p {
+  margin-top: 6px;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.diagnostic-frame {
+  display: block;
+  width: 100%;
+  border: 0;
+  background: #f4f8fc;
+}
+
+.eye-test-frame {
+  height: 760px;
+  background: #08101d;
+}
+
+.distance-test-frame {
+  height: 650px;
+}
+
 .status-dot {
   display: block;
   width: 14px;
@@ -1464,6 +1524,18 @@ body.is-running-page .dog-eyes,
 
   .run-floating-controls {
     inset: 0;
+  }
+
+  .integrated-test-heading {
+    padding: 14px;
+  }
+
+  .eye-test-frame {
+    height: 720px;
+  }
+
+  .distance-test-frame {
+    height: 600px;
   }
 
   .page-dock {

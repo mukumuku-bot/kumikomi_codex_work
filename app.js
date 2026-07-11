@@ -65,6 +65,7 @@ const elements = {
   transcriptionStatus: document.querySelector("#transcriptionStatus"),
   transcribeButton: document.querySelector("#transcribeButton"),
   transcriptText: document.querySelector("#transcriptText"),
+  diagnosticFrames: document.querySelectorAll("[data-src].diagnostic-frame"),
 };
 
 const runState = {
@@ -214,9 +215,26 @@ function showRouteFromHash() {
 
   if (currentRoute !== "check") {
     stopVolumeMeter();
+    unloadDiagnosticFrames();
+  } else {
+    loadDiagnosticFrames();
   }
 
   updateAuthNavigation();
+}
+
+function loadDiagnosticFrames() {
+  elements.diagnosticFrames.forEach((frame) => {
+    if (frame.getAttribute("src") === frame.dataset.src) return;
+    frame.setAttribute("src", frame.dataset.src);
+  });
+}
+
+function unloadDiagnosticFrames() {
+  elements.diagnosticFrames.forEach((frame) => {
+    if (frame.getAttribute("src") === "about:blank") return;
+    frame.setAttribute("src", "about:blank");
+  });
 }
 
 function updateRunningViewMode() {

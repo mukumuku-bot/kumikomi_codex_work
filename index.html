@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#101828" />
     <title>スマホ犬（Smartphone Dog）</title>
     <link rel="manifest" href="./manifest.webmanifest" />
-    <link rel="stylesheet" href="./styles.css?v=eye-expression-1" />
+    <link rel="stylesheet" href="./styles.css?v=diagnostic-integration-1" />
   </head>
   <body>
     <header class="topbar">
@@ -136,13 +136,13 @@
             <span>04</span>
             <h2>人との距離を計算する</h2>
             <p>カメラ映像から人物または顔を検出し、おおよその距離を表示します。2m以内に入ったときは画面表示と音で知らせます。</p>
-            <a class="feature-link" href="./person-distance/">距離計算ページを開く</a>
+            <a class="feature-link" href="#check">動作確認で試す</a>
           </article>
           <article class="feature-card">
             <span>05</span>
             <h2>目の表情をテストする</h2>
             <p>上部に表示した目を見ながら、嬉しい、とても嬉しい、悲しい・元気がない表情をボタンで切り替えられます。</p>
-            <a class="feature-link" href="./eye-test/">表情テストページを開く</a>
+            <a class="feature-link" href="#check">動作確認で試す</a>
           </article>
         </div>
 
@@ -310,6 +310,49 @@
           </div>
         </section>
 
+        <section class="integrated-diagnostics" aria-labelledby="integratedDiagnosticsTitle">
+          <div class="section-title">
+            <p class="eyebrow">Interactive Tests</p>
+            <h2 id="integratedDiagnosticsTitle">詳細動作テスト</h2>
+            <p>目の表情切り替えと、カメラを使った人物との距離計算をこのページ内で確認できます。</p>
+          </div>
+
+          <article class="integrated-test-card">
+            <div class="integrated-test-heading">
+              <span>01</span>
+              <div>
+                <h2>目の表情テスト</h2>
+                <p>表情、瞬き、睡眠、視線移動をボタンで確認します。</p>
+              </div>
+            </div>
+            <iframe
+              class="diagnostic-frame eye-test-frame"
+              title="目の表情テスト"
+              src="about:blank"
+              data-src="./eye-test/?embed=1"
+              loading="lazy"
+            ></iframe>
+          </article>
+
+          <article class="integrated-test-card">
+            <div class="integrated-test-heading">
+              <span>02</span>
+              <div>
+                <h2>人物距離テスト</h2>
+                <p>カメラから人物または顔までのおおよその距離を計算します。</p>
+              </div>
+            </div>
+            <iframe
+              class="diagnostic-frame distance-test-frame"
+              title="人物距離テスト"
+              src="about:blank"
+              data-src="./person-distance/?embed=1"
+              loading="lazy"
+              allow="camera"
+            ></iframe>
+          </article>
+        </section>
+
         <section class="diagnostic-help" aria-label="原因の見方">
           <h2>原因の見方</h2>
           <div>
@@ -452,14 +495,6 @@
         <span aria-hidden="true">▶</span>
         動作中
       </a>
-      <a href="./person-distance/">
-        <span aria-hidden="true">m</span>
-        距離計算
-      </a>
-      <a href="./eye-test/">
-        <span aria-hidden="true">◎</span>
-        目テスト
-      </a>
     </nav>
 
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
@@ -467,6 +502,6 @@
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/face-detection@1.0.3/dist/face-detection.min.js"></script>
     <script src="./supabase-config.js?v=alsok-inspired-16"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="./app.js?v=voice-name-gate-1" type="module"></script>
+    <script src="./app.js?v=diagnostic-integration-1" type="module"></script>
   </body>
 </html>

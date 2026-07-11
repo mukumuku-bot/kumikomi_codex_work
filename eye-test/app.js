@@ -4,6 +4,7 @@ const currentExpression = document.querySelector("#currentExpression");
 const expressionButtons = document.querySelectorAll("[data-expression]");
 const actionButtons = document.querySelectorAll("[data-action]");
 const lookButtons = document.querySelectorAll("[data-look]");
+document.body.classList.toggle("is-embedded", new URLSearchParams(window.location.search).has("embed"));
 const expressions = [
   "happy",
   "very_happy",

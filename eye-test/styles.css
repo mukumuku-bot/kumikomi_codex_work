@@ -126,3 +126,27 @@ a {
     width: min(168vw, 820px);
   }
 }
+
+body.is-embedded {
+  min-height: 0;
+}
+
+body.is-embedded .test-header {
+  display: none;
+}
+
+body.is-embedded .eye-test {
+  width: min(100% - 20px, 980px);
+  padding: 10px 0 18px;
+}
+
+body.is-embedded .eye-stage {
+  position: relative;
+  min-height: 350px;
+}
+
+@media (max-width: 640px) {
+  body.is-embedded .eye-stage {
+    min-height: 300px;
+  }
+}

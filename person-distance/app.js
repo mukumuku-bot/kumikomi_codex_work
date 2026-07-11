@@ -27,10 +27,12 @@ const CAMERA_VERTICAL_FOV_DEGREES = 58;
 const TARGET_DISTANCE_METERS = 2;
 const TARGET_DISTANCE_EXIT_METERS = 2.15;
 const ctx = elements.overlay.getContext("2d");
+document.body.classList.toggle("is-embedded", new URLSearchParams(window.location.search).has("embed"));
 
 elements.startButton.addEventListener("click", startCamera);
 elements.stopButton.addEventListener("click", stopCamera);
 window.addEventListener("resize", resizeOverlay);
+window.addEventListener("pagehide", stopCamera);
 
 async function startCamera() {
   elements.startButton.disabled = true;
