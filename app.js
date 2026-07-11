@@ -76,6 +76,7 @@ const runState = {
   eyeX: 0,
   eyeY: 0,
   sleeping: false,
+  voiceEmotionTimer: null,
   trackedCenter: null,
   coveredFrames: 0,
 };
@@ -623,6 +624,7 @@ async function startRun() {
 function stopRun() {
   runState.running = false;
   runState.detecting = false;
+  clearVoiceEmotion();
   stopHiddenTranscription();
   stopVolumeMeter();
   if (runState.rafId) cancelAnimationFrame(runState.rafId);
@@ -1289,18 +1291,68 @@ function handleVoiceCommand(text) {
   const heard = normalizeSpeech(text);
   if (!dogName || !heard.includes(dogName)) return;
 
-  const isComeCommand = heard.includes("おいで");
-  const barkCount = isComeCommand ? 2 : 1;
-  const commandKey = `${barkCount}:${heard}`;
+  const command = getVoiceCommand(heard);
+  const commandKey = `${command.id}:${heard}`;
   const now = Date.now();
   if (speechState.lastCommandKey === commandKey && now - speechState.lastCommandAt < 1800) return;
 
   speechState.lastCommandKey = commandKey;
   speechState.lastCommandAt = now;
-  bark(barkCount);
+  triggerVoiceEmotion(command.emotion, command.duration);
+  bark(command.barkCount);
   window.setTimeout(() => {
-    speakKyokoReply(isComeCommand ? "いま行きます。" : "どうしましたか。");
-  }, barkCount * 360 + 100);
+    speakKyokoReply(command.reply);
+  }, command.barkCount * 360 + 100);
+}
+
+function getVoiceCommand(heard) {
+  if (includesCommandWord(heard, ["おいで"])) {
+    return { id: "come", barkCount: 2, reply: "いま行きます。", emotion: "excited", duration: 2400 };
+  }
+
+  if (includesCommandWord(heard, ["おて", "お手"])) {
+    return { id: "paw", barkCount: 1, reply: "おて。どうぞ。", emotion: "proud", duration: 2100 };
+  }
+
+  if (includesCommandWord(heard, ["おすわり", "お座り"])) {
+    return { id: "sit", barkCount: 1, reply: "おすわり。おりこうだワン。", emotion: "calm", duration: 2200 };
+  }
+
+  if (includesCommandWord(heard, ["まて", "待て"])) {
+    return { id: "wait", barkCount: 1, reply: "まってるワン。", emotion: "patient", duration: 2200 };
+  }
+
+  return { id: "name", barkCount: 1, reply: "どうしましたか。", emotion: "happy", duration: 1800 };
+}
+
+function includesCommandWord(heard, words) {
+  return words.some((word) => heard.includes(word));
+}
+
+function triggerVoiceEmotion(emotion, duration) {
+  const classes = ["is-emotion-happy", "is-emotion-excited", "is-emotion-proud", "is-emotion-calm", "is-emotion-patient"];
+  const emotionClass = `is-emotion-${emotion}`;
+  elements.dogEyes.classList.remove(...classes);
+  elements.dogEyes.classList.add(emotionClass);
+  blinkEyes();
+
+  if (runState.voiceEmotionTimer) window.clearTimeout(runState.voiceEmotionTimer);
+  runState.voiceEmotionTimer = window.setTimeout(() => {
+    elements.dogEyes.classList.remove(emotionClass);
+    runState.voiceEmotionTimer = null;
+  }, duration);
+}
+
+function clearVoiceEmotion() {
+  if (runState.voiceEmotionTimer) window.clearTimeout(runState.voiceEmotionTimer);
+  runState.voiceEmotionTimer = null;
+  elements.dogEyes.classList.remove(
+    "is-emotion-happy",
+    "is-emotion-excited",
+    "is-emotion-proud",
+    "is-emotion-calm",
+    "is-emotion-patient",
+  );
 }
 
 function primeKyokoVoice() {

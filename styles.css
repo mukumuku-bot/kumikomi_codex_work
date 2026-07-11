@@ -990,11 +990,42 @@ body.is-running-page .dog-eyes,
   stroke-width: 8;
   stroke-linecap: round;
   filter: drop-shadow(0 0 8px rgba(92, 168, 255, 0.68));
+  transition: stroke 180ms ease, opacity 180ms ease;
 }
 
 .eye-aura {
   fill: rgba(43, 157, 255, 0.12);
   filter: blur(1px) drop-shadow(0 0 20px rgba(77, 185, 255, 0.42));
+  transition: opacity 180ms ease;
+}
+
+.dog-eyes.is-emotion-happy .eye-brow,
+.dog-eyes.is-emotion-proud .eye-brow {
+  stroke: #8fd0ff;
+}
+
+.dog-eyes.is-emotion-excited .eye-aura {
+  opacity: 1;
+  animation: voice-emotion-pulse 460ms ease-in-out 4;
+}
+
+.dog-eyes.is-emotion-proud .eye-aura {
+  opacity: 0.9;
+}
+
+.dog-eyes.is-emotion-calm .eye-aura,
+.dog-eyes.is-emotion-patient .eye-aura {
+  opacity: 0.55;
+}
+
+.dog-eyes.is-emotion-patient .eye-brow {
+  opacity: 0.78;
+}
+
+@keyframes voice-emotion-pulse {
+  50% {
+    opacity: 0.5;
+  }
 }
 
 .eye-rim {
