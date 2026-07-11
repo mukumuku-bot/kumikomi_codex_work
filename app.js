@@ -533,7 +533,6 @@ async function checkMic() {
 function checkSpeech() {
   if (!speechState.supported) {
     startHiddenTranscription();
-    startVolumeMeter();
     return;
   }
 
@@ -541,7 +540,6 @@ function checkSpeech() {
     setCheck(elements.speechDot, elements.speechCheckText, "is-ok", "名前を呼ぶ確認を開始しました");
     elements.checkTranscriptText.textContent = "聞き取り中です";
     startHiddenTranscription();
-    startVolumeMeter();
   } else {
     setCheck(elements.speechDot, elements.speechCheckText, "is-warn", "このブラウザは音声認識に未対応です");
   }
@@ -588,7 +586,7 @@ async function startRun() {
     await new Promise((resolve) => requestAnimationFrame(resolve));
 
     const stream = await navigator.mediaDevices.getUserMedia({
-      audio: true,
+      audio: false,
       video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } },
     });
 
@@ -599,7 +597,6 @@ async function startRun() {
     const detectionReady = await prepareDetection();
     updateRunningViewMode();
     elements.stopRunButton.disabled = false;
-    startVolumeMeter(runState.stream);
     elements.runStatusText.textContent = detectionReady ? "人物を探しています" : "目だけを表示しています";
     startHiddenTranscription();
     if (detectionReady) {
