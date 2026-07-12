@@ -1702,6 +1702,7 @@ function applyDirectEmotionOverlay(emotion) {
   const sparkles = elements.dogEyes.querySelectorAll(".sparkle");
   const brows = elements.dogEyes.querySelectorAll(".eye-brow");
   const irises = elements.dogEyes.querySelectorAll(".iris");
+  const irisLines = elements.dogEyes.querySelectorAll(".iris-line");
   const auras = elements.dogEyes.querySelectorAll(".eye-aura");
 
   setSvgPresentation(joy, happy ? "1" : "0", veryHappy ? "translateY(-6px) scale(1.08)" : "none");
@@ -1714,6 +1715,18 @@ function applyDirectEmotionOverlay(emotion) {
   brows.forEach((brow) => setSvgPresentation(brow, sad ? "0" : "1"));
   irises.forEach((iris) => setSvgPresentation(iris, sad ? "0.52" : "1"));
   auras.forEach((aura) => setSvgPresentation(aura, sad ? "0.16" : "1"));
+  brows.forEach((brow) => {
+    brow.style.stroke = happy ? (veryHappy ? "#d5f2ff" : "#a6dcff") : "#5ca8ff";
+  });
+  irisLines.forEach((line) => {
+    line.style.stroke = happy ? "#ffffff" : "#dff7ff";
+    line.style.strokeWidth = veryHappy ? "5.5" : happy ? "4.4" : "3";
+  });
+  auras.forEach((aura) => {
+    aura.style.filter = happy
+      ? `blur(1px) drop-shadow(0 0 ${veryHappy ? "36px" : "26px"} rgba(104, 209, 255, 0.95))`
+      : "blur(1px) drop-shadow(0 0 20px rgba(77, 185, 255, 0.42))";
+  });
 }
 
 function fadeDirectEmotionOverlay() {
@@ -1726,6 +1739,7 @@ function fadeDirectEmotionOverlay() {
   const visible = [
     ...elements.dogEyes.querySelectorAll(".eye-brow"),
     ...elements.dogEyes.querySelectorAll(".iris"),
+    ...elements.dogEyes.querySelectorAll(".iris-line"),
     ...elements.dogEyes.querySelectorAll(".eye-aura"),
   ];
   hidden.forEach((node) => setSvgPresentation(node, "0", "none", "900ms"));
@@ -1734,19 +1748,22 @@ function fadeDirectEmotionOverlay() {
 
 function clearDirectEmotionOverlay() {
   const nodes = elements.dogEyes.querySelectorAll(
-    ".emotion-joy, .emotion-sad, .sad-brows, .sparkle, .eye-brow, .iris, .eye-aura",
+    ".emotion-joy, .emotion-sad, .sad-brows, .sparkle, .eye-brow, .iris, .iris-line, .eye-aura",
   );
   nodes.forEach((node) => {
     node.style.removeProperty("opacity");
     node.style.removeProperty("transform");
     node.style.removeProperty("transition");
     node.style.removeProperty("animation");
+    node.style.removeProperty("stroke");
+    node.style.removeProperty("stroke-width");
+    node.style.removeProperty("filter");
   });
 }
 
 function setSvgPresentation(node, opacity, transform = "none", duration = "180ms") {
   if (!node) return;
-  node.style.transition = `opacity ${duration} ease-out, transform ${duration} ease-out`;
+  node.style.transition = `opacity ${duration} ease-out, transform ${duration} ease-out, stroke ${duration} ease-out, filter ${duration} ease-out`;
   node.style.opacity = opacity;
   node.style.transform = transform;
 }
