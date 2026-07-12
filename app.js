@@ -83,6 +83,7 @@ const runState = {
   sleeping: false,
   emotion: "normal",
   emotionTimer: null,
+  emotionFadeTimer: null,
   command: "待機",
   pulseCommand: "",
   pulseTimer: null,
@@ -156,6 +157,8 @@ const TWO_METERS_FACE_HEIGHT_RATIO = 0.11;
 const MIN_VISIBLE_PERSON_SCORE = 0.62;
 const MIN_VISIBLE_FACE_SCORE = 0.65;
 const MIN_VISIBLE_FACE_HEIGHT_RATIO = 0.045;
+const MIN_EMOTION_HOLD_MS = 3000;
+const EMOTION_FADE_MS = 900;
 const CIRCLE_CONFIRM_FRAMES = 6;
 const CIRCLE_RELEASE_FRAMES = 8;
 const HAND_DETECTION_INTERVAL_MS = 120;
@@ -824,7 +827,7 @@ function enterTrickMode() {
   clearEmotionTimer();
   runState.command = "芸";
   runState.emotion = "normal";
-  elements.dogEyes.classList.remove("is-emotion-happy", "is-emotion-very-happy", "is-emotion-sad");
+  elements.dogEyes.classList.remove("is-emotion-happy", "is-emotion-very-happy", "is-emotion-sad", "is-emotion-fading");
   wakeEyes();
   elements.runStatusText.textContent = "芸を見ています";
   publishRunningBehavior();
@@ -1639,7 +1642,7 @@ function setEmotion(emotion, duration = 0) {
   clearEmotionTimer();
   runState.emotion = emotion;
   const classes = ["is-emotion-happy", "is-emotion-very-happy", "is-emotion-sad"];
-  elements.dogEyes.classList.remove(...classes);
+  elements.dogEyes.classList.remove(...classes, "is-emotion-fading");
 
   if (emotion === "sleepy") {
     sleepEyes();
@@ -1655,14 +1658,26 @@ function setEmotion(emotion, duration = 0) {
     runState.emotionTimer = window.setTimeout(() => {
       runState.emotionTimer = null;
       if (!runState.running) return;
-      setEmotion("normal");
-    }, duration);
+      fadeEmotionToNormal(classes);
+    }, Math.max(duration, MIN_EMOTION_HOLD_MS));
   }
 }
 
 function clearEmotionTimer() {
   if (runState.emotionTimer) window.clearTimeout(runState.emotionTimer);
+  if (runState.emotionFadeTimer) window.clearTimeout(runState.emotionFadeTimer);
   runState.emotionTimer = null;
+  runState.emotionFadeTimer = null;
+}
+
+function fadeEmotionToNormal(classes) {
+  elements.dogEyes.classList.add("is-emotion-fading");
+  runState.emotionFadeTimer = window.setTimeout(() => {
+    elements.dogEyes.classList.remove(...classes, "is-emotion-fading");
+    runState.emotion = "normal";
+    runState.emotionFadeTimer = null;
+    publishRunningBehavior();
+  }, EMOTION_FADE_MS);
 }
 
 function isWithinTwoMeters(bbox, frameHeight, targetType) {

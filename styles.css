@@ -1212,6 +1212,28 @@ body.is-running-page .dog-eyes,
   opacity: 1;
 }
 
+.dog-eyes.is-emotion-fading .eye-brow {
+  stroke: #5ca8ff;
+  opacity: 1;
+  transform: none;
+  transition: stroke 900ms ease-out, opacity 900ms ease-out, transform 900ms ease-out;
+}
+
+.dog-eyes.is-emotion-fading .eye-aura,
+.dog-eyes.is-emotion-fading .iris,
+.dog-eyes.is-emotion-fading .eye-shell {
+  opacity: 1;
+  animation: none;
+  transition: opacity 900ms ease-out;
+}
+
+.dog-eyes.is-emotion-fading .emotion-mark,
+.dog-eyes.is-emotion-fading .sparkle {
+  opacity: 0;
+  animation: none;
+  transition: opacity 900ms ease-out, transform 900ms ease-out;
+}
+
 @keyframes voice-emotion-pulse {
   50% {
     opacity: 0.5;
