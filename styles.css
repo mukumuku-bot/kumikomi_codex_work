@@ -1587,6 +1587,197 @@ body.is-running-page .dog-eyes,
   }
 }
 
+/* Product page: dark hardware-style theme without affecting the operating screens. */
+body.is-product-page {
+  background: #080808;
+  color: #f5f5f5;
+}
+
+body.is-product-page .topbar {
+  background: #0d0d0d;
+  border-bottom-color: #3d2a1a;
+  box-shadow: none;
+}
+
+body.is-product-page .brand,
+body.is-product-page .top-actions a {
+  color: #f7f2ed;
+}
+
+body.is-product-page .brand-mark {
+  background: #f57c00;
+  color: #121212;
+}
+
+body.is-product-page .brand small {
+  color: #ff9d2e;
+}
+
+body.is-product-page .top-actions a {
+  border-color: #5b3417;
+  background: #17120e;
+}
+
+body.is-product-page .top-actions a:hover {
+  border-color: #ff8a18;
+  color: #ffb15d;
+}
+
+body.is-product-page .page-shell {
+  width: min(1240px, calc(100% - 32px));
+}
+
+body.is-product-page #product {
+  color: #f6f4f1;
+}
+
+body.is-product-page #product .product-layout {
+  min-height: 610px;
+  border: 1px solid #633713;
+  border-left: 8px solid #f57c00;
+  background: #121212;
+  box-shadow: 0 24px 55px rgba(0, 0, 0, 0.42);
+}
+
+body.is-product-page #product .product-layout::before {
+  content: "SMARTPHONE DOG";
+  left: 24px;
+  right: auto;
+  top: 18px;
+  width: auto;
+  height: auto;
+  background: transparent;
+  color: rgba(255, 143, 31, 0.18);
+  font-size: clamp(2rem, 5vw, 5.4rem);
+  font-weight: 900;
+  letter-spacing: 0;
+  opacity: 1;
+}
+
+body.is-product-page #product .product-layout::after {
+  height: 6px;
+  background: #f57c00;
+}
+
+body.is-product-page #product .product-layout .page-heading,
+body.is-product-page #product .product-layout .page-heading h1 {
+  color: #ffffff;
+}
+
+body.is-product-page #product .product-layout .page-heading p:not(.eyebrow),
+body.is-product-page #product .feature-card p,
+body.is-product-page #product .behavior-flow span,
+body.is-product-page #product .guide-card p {
+  color: #c9c3bc;
+}
+
+body.is-product-page #product .eyebrow {
+  border-left-color: #ffb15d;
+  background: #f57c00;
+  color: #111111;
+}
+
+body.is-product-page #product .manual-scoreboard span {
+  border-color: #55341d;
+  border-left-color: #ff8a18;
+  background: #191512;
+  color: #f4ede6;
+  box-shadow: none;
+}
+
+body.is-product-page #product .manual-scoreboard strong {
+  color: #ff9d2e;
+}
+
+body.is-product-page #product .product-photo {
+  border-color: #f57c00;
+  background: #050505;
+  box-shadow: 0 22px 45px rgba(0, 0, 0, 0.48);
+}
+
+body.is-product-page #product .product-photo::before {
+  background: #f57c00;
+  color: #111111;
+}
+
+body.is-product-page #product .product-photo::after {
+  background: #ffb15d;
+}
+
+body.is-product-page #product .feature-card,
+body.is-product-page #product .guide-card,
+body.is-product-page #product .behavior-flow,
+body.is-product-page #product .behavior-flow li {
+  border-color: #4f321e;
+  background: #151311;
+  box-shadow: none;
+}
+
+body.is-product-page #product .feature-card::before {
+  background: #f57c00;
+}
+
+body.is-product-page #product .feature-card span {
+  background: #f57c00;
+  color: #111111;
+}
+
+body.is-product-page #product .feature-card h2,
+body.is-product-page #product .guide-card h3,
+body.is-product-page #product .behavior-flow h2,
+body.is-product-page #product .behavior-flow strong,
+body.is-product-page #product .section-title h2 {
+  color: #ffffff;
+}
+
+body.is-product-page #product .feature-link {
+  color: #ff9d2e;
+}
+
+body.is-product-page #product .feature-card:hover,
+body.is-product-page #product .guide-card:hover {
+  border-color: #ff8a18;
+  box-shadow: 0 14px 32px rgba(245, 124, 0, 0.16);
+}
+
+body.is-product-page #product .guide-art,
+body.is-product-page #product .settings-visual {
+  border-color: #5b371d;
+  background: #0e0d0c;
+}
+
+body.is-product-page #product .phone-frame,
+body.is-product-page #product .dock-phone {
+  border-color: #ff8a18;
+  background: #121212;
+  box-shadow: none;
+}
+
+body.is-product-page #product .screen-line,
+body.is-product-page #product .dock-arrow {
+  background: #ff8a18;
+}
+
+body.is-product-page #product .check-badge,
+body.is-product-page #product .tap-circle {
+  border-color: #ff9d2e;
+  background: #f57c00;
+}
+
+body.is-product-page #product .behavior-flow {
+  border-top-color: #f57c00;
+}
+
+body.is-product-page #product .behavior-flow li::before {
+  color: #ff9d2e;
+}
+
+@media (max-width: 900px) {
+  body.is-product-page #product .product-layout {
+    background: #121212;
+  }
+}
+
 /* ALSOK-inspired redesign: clean safety-service structure, blue/yellow accents, no drawn dog illustration. */
 :root {
   --bg: #f4f7fb;

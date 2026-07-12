@@ -219,6 +219,8 @@ function showRouteFromHash() {
     tab.classList.toggle("is-active", tab.dataset.route === currentRoute);
   });
 
+  document.body.classList.toggle("is-product-page", currentRoute === "product");
+
   updateRunningViewMode();
 
   if (currentRoute !== "running" && currentRoute !== "check") {
